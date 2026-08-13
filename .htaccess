@@ -1,0 +1,12 @@
+# Proteger archivos sensibles
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files ".env.example">
+    Order allow,deny
+    Deny from all
+</Files>
+# Bloquear acceso a directorios privados de la aplicación
+RewriteEngine On
+RewriteRule ^(app|vendor|sql|logs|composer\.json|composer\.phar)/ - [F,L]

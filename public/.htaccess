@@ -1,0 +1,10 @@
+# URL Rewriting para el Front Controller
+RewriteEngine On
+RewriteBase /barberia_style/public/
+
+# No reescribir rutas del panel admin (admin.php/...)
+RewriteCond %{REQUEST_URI} !admin\.php
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L]

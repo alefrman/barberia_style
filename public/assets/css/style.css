@@ -1,0 +1,158 @@
+/* ============================================================
+   Barbería Style — Diseño Premium
+   Paleta: #2D3748 | #F59E0B | #FBBF24 | #FEF9C3
+   ============================================================ */
+
+:root {
+    --gold: #F59E0B;
+    --gold-light: #FBBF24;
+    --gold-dark: #B45309;
+    --cream: #FEF9C3;
+    --dark: #2D3748;
+    --dark-soft: #1F2937;
+    --dark-deep: #111827;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--dark-deep);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--dark-deep); }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+    border-radius: 999px;
+    border: 2px solid var(--dark-deep);
+}
+
+::selection { background: rgba(245, 158, 11, .35); color: var(--cream); }
+
+/* ---------- Tipografía ---------- */
+.font-display { font-family: 'Playfair Display', Georgia, serif; }
+
+.eyebrow {
+    letter-spacing: .35em;
+    text-transform: uppercase;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.text-gold-grad {
+    background: linear-gradient(92deg, var(--gold-light) 0%, var(--gold) 55%, var(--gold-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ---------- Navbar ---------- */
+.navbar {
+    transition: box-shadow .3s ease, background .3s ease;
+}
+.navbar.scrolled {
+    box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .8);
+}
+.nav-link {
+    position: relative;
+    transition: color .25s ease;
+}
+.nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -4px;
+    width: 0; height: 1.5px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    transition: width .3s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after { width: 100%; }
+.nav-link.active { color: var(--gold-light); }
+
+/* ---------- Botones ---------- */
+.btn-shine {
+    position: relative;
+    overflow: hidden;
+}
+.btn-shine::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -140%;
+    width: 55%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, .4), transparent);
+    transform: skewX(-20deg);
+    transition: left .55s ease;
+}
+.btn-shine:hover::after { left: 160%; }
+
+/* ---------- Hero ---------- */
+.hero-bg {
+    background:
+        radial-gradient(ellipse 70% 55% at 75% 15%, rgba(245, 158, 11, .16), transparent 62%),
+        radial-gradient(ellipse 55% 45% at 15% 85%, rgba(251, 191, 36, .10), transparent 58%),
+        linear-gradient(155deg, #0B0E16 0%, var(--dark-soft) 55%, var(--dark) 100%);
+}
+.hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(245, 158, 11, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 158, 11, .05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 40%, transparent 100%);
+}
+
+/* ---------- Marquee ---------- */
+.marquee { overflow: hidden; }
+.marquee-track {
+    display: flex;
+    align-items: center;
+    gap: 3.5rem;
+    white-space: nowrap;
+    animation: marquee 30s linear infinite;
+}
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* ---------- Tarjetas ---------- */
+.card {
+    transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+}
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 60px -25px rgba(0, 0, 0, .85), 0 0 0 1px rgba(245, 158, 11, .35);
+}
+
+/* ---------- Reveal on scroll ---------- */
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity .7s ease, transform .7s ease;
+    transition-delay: var(--delay, 0ms);
+}
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* ---------- Hover de galería ---------- */
+.gallery-item { position: relative; overflow: hidden; }
+.gallery-item img { transition: transform .7s ease; }
+.gallery-item:hover img { transform: scale(1.08); }
+.gallery-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: flex-end;
+    padding: 1.25rem;
+    background: linear-gradient(to top, rgba(11, 14, 22, .9) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity .4s ease;
+}
+.gallery-item:hover .gallery-overlay { opacity: 1; }
