@@ -318,9 +318,9 @@ class AppointmentController extends Controller
         $statuses = AppointmentStatus::all('id', 'ASC');
 
         $values = $appointment !== null ? $appointment->toArray() : [
-            'type_id' => 2, 'status_id' => 1, 'client_name' => '', 'client_phone' => '',
+            'type_id' => 1, 'status_id' => 1, 'client_name' => '', 'client_phone' => '',
             'client_email' => '', 'appointment_date' => date('Y-m-d'),
-            'appointment_time' => date('H:i'), 'notes' => '',
+            'appointment_time' => date('H:i', strtotime('+1 hour')), 'notes' => '',
         ];
 
         $selectedServices = [];
@@ -401,6 +401,14 @@ class AppointmentController extends Controller
 
         if (AppointmentType::find($data['type_id']) === null) {
             $errors[] = 'Selecciona un tipo de cita válido.';
+        } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['appointment_date'])) {
+            $typeName = strtolower((string) AppointmentType::find($data['type_id'])->getAttribute('name'));
+            $isToday = $data['appointment_date'] === date('Y-m-d');
+            if ($isToday && $typeName === 'programada') {
+                $errors[] = 'Una cita para hoy debe tener el tipo "Ahora".';
+            } elseif (!$isToday && $typeName === 'ahora') {
+                $errors[] = 'Una cita para una fecha futura debe tener el tipo "Programada".';
+            }
         }
         if (AppointmentStatus::find($data['status_id']) === null) {
             $errors[] = 'Selecciona un estado válido.';
@@ -418,9 +426,13 @@ class AppointmentController extends Controller
         }
         if ($data['appointment_date'] === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['appointment_date'])) {
             $errors[] = 'Ingresa una fecha de cita válida.';
+        } elseif (strcmp($data['appointment_date'], date('Y-m-d')) < 0) {
+            $errors[] = 'No puedes registrar citas en fechas pasadas.';
         }
         if ($data['appointment_time'] === '' || !preg_match('/^\d{2}:\d{2}/', $data['appointment_time'])) {
             $errors[] = 'Ingresa una hora de cita válida.';
+        } elseif ($data['appointment_date'] === date('Y-m-d') && $data['appointment_time'] < date('H:i', strtotime('+1 hour'))) {
+            $errors[] = 'Para citas de hoy, la hora debe ser al menos 1 hora después de la hora actual.';
         }
         if ($data['services'] === [] && $data['products'] === []) {
             $errors[] = 'Debes agregar al menos un servicio o un producto a la cita.';

@@ -22,7 +22,7 @@ $submitUrl = $isEditing
         </div>
     </div>
 
-    <form method="POST" action="<?= $submitUrl ?>" class="space-y-6" id="appointment-form">
+    <form method="POST" action="<?= $submitUrl ?>" class="space-y-6" id="appointment-form" novalidate>
         <input type="hidden" name="_csrf" value="<?= View::e(Session::csrfToken()) ?>">
 
         <!-- ======== Datos del cliente y cita ======== -->
@@ -43,11 +43,11 @@ $submitUrl = $isEditing
                 </div>
                 <div>
                     <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="appointment_date">Fecha *</label>
-                    <input type="date" id="appointment_date" name="appointment_date" required value="<?= View::e($values['appointment_date'] ?? date('Y-m-d')) ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
+                    <input type="date" id="appointment_date" name="appointment_date" required min="<?= date('Y-m-d') ?>" value="<?= View::e($values['appointment_date'] ?? date('Y-m-d')) ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
                 </div>
                 <div>
                     <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="appointment_time">Hora *</label>
-                    <input type="time" id="appointment_time" name="appointment_time" required value="<?= View::e($values['appointment_time'] ?? '') ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
+                    <input type="time" id="appointment_time" name="appointment_time" required step="60" min="<?= ($values['appointment_date'] ?? '') === date('Y-m-d') ? date('H:i', strtotime('+1 hour')) : '' ?>" value="<?= View::e($values['appointment_time'] ?? '') ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
                 </div>
                 <div>
                     <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="type_id">Tipo *</label>
@@ -274,9 +274,120 @@ function updateTotals() {
 document.addEventListener('input', e => {
     if (e.target.classList.contains('product-qty')) updateTotals();
     if (e.target.id === 'client_phone') formatPhone(e.target);
+    if (e.target.classList.contains('field-invalid')) {
+        e.target.classList.remove('field-invalid', 'border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+        const err = e.target.nextElementSibling;
+        if (err && err.classList.contains('field-error')) err.remove();
+    }
 });
 document.addEventListener('change', e => {
     if (e.target.classList.contains('service-select') || e.target.classList.contains('product-select')) updateTotals();
 });
+
+const dateInput = document.getElementById('appointment_date');
+const timeInput = document.getElementById('appointment_time');
+
+function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function minTimeStr() {
+    const d = new Date(Date.now() + 60 * 60 * 1000);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function updateTimeMin() {
+    if (dateInput && timeInput) {
+        timeInput.min = dateInput.value === todayStr() ? minTimeStr() : '';
+    }
+}
+
+function syncTypeWithDate() {
+    const typeSelect = document.getElementById('type_id');
+    if (!typeSelect || !dateInput) return;
+    const targetName = dateInput.value === todayStr() ? 'Ahora' : 'Programada';
+    for (const opt of typeSelect.options) {
+        if (opt.textContent.trim() === targetName) {
+            typeSelect.value = opt.value;
+            break;
+        }
+    }
+}
+
+if (dateInput) {
+    dateInput.addEventListener('change', updateTimeMin);
+    dateInput.addEventListener('change', syncTypeWithDate);
+}
+document.addEventListener('DOMContentLoaded', updateTimeMin);
+document.addEventListener('DOMContentLoaded', syncTypeWithDate);
+
 document.addEventListener('DOMContentLoaded', updateTotals);
+
+const appointmentForm = document.getElementById('appointment-form');
+
+function clearFieldErrors() {
+    document.querySelectorAll('.field-error').forEach(el => el.remove());
+    document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid', 'border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20'));
+}
+
+appointmentForm.addEventListener('submit', function (e) {
+    clearFieldErrors();
+    let hasErrors = false;
+    let firstError = null;
+
+    const showError = (field, message) => {
+        hasErrors = true;
+        if (!firstError) firstError = field;
+        field.classList.add('field-invalid', 'border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+        const p = document.createElement('p');
+        p.className = 'field-error mt-2 text-xs text-red-400';
+        p.textContent = message;
+        field.insertAdjacentElement('afterend', p);
+    };
+
+    const requiredFields = {
+        client_name: 'Nombre del cliente',
+        appointment_date: 'Fecha',
+        appointment_time: 'Hora',
+        type_id: 'Tipo',
+        status_id: 'Estado',
+    };
+    for (const [id, label] of Object.entries(requiredFields)) {
+        const el = document.getElementById(id);
+        if (!el || el.value.trim() === '') showError(el, 'El campo ' + label + ' es obligatorio.');
+    }
+
+    const phoneEl = document.getElementById('client_phone');
+    const phone = phoneEl.value.trim();
+    if (phone !== '' && !/^\+503 \d{4}-\d{4}$/.test(phone)) {
+        showError(phoneEl, 'El teléfono debe tener el formato +503 0000-0000.');
+    }
+
+    const emailEl = document.getElementById('client_email');
+    const email = emailEl.value.trim();
+    if (email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError(emailEl, 'Ingresa un email de cliente válido.');
+    }
+
+    if (dateInput.value < todayStr()) {
+        showError(dateInput, 'No puedes registrar citas en fechas pasadas.');
+    } else if (dateInput.value === todayStr() && timeInput.value !== '' && timeInput.value < minTimeStr()) {
+        showError(timeInput, 'La hora debe ser al menos 1 hora después de la hora actual.');
+    }
+
+    const hasService = [...document.querySelectorAll('.service-select')].some(s => Number(s.value) > 0);
+    const hasProduct = [...document.querySelectorAll('.product-select')].some(p => Number(p.value) > 0);
+    if (!hasService && !hasProduct) {
+        showError(document.getElementById('services-container'), 'Debes agregar al menos un servicio o un producto a la cita.');
+    }
+
+    if (hasErrors) {
+        e.preventDefault();
+        if (firstError) {
+            firstError.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            firstError.focus({ preventScroll: true });
+        }
+    }
+});
 </script>
