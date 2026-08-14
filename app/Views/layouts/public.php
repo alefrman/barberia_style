@@ -4,9 +4,57 @@
  * Paleta: #2D3748 | #F59E0B | #FBBF24 | #FEF9C3
  */
 use App\Core\View;
+use App\Helpers\Settings;
+use App\Models\SocialLink;
 
 $pageTitle = $title ?? 'Cortes y estética masculina';
 $activeNav = $active ?? '';
+
+$siteName        = (string) Settings::get('site_name', APP_NAME);
+$siteTagline     = (string) Settings::get('site_tagline', 'Estética masculina');
+$siteDescription = (string) Settings::get('site_description', 'Calidad, precisión y estilo en cada corte. La barbería clásica con un toque moderno que marca la diferencia.');
+$contactPhone    = (string) Settings::get('phone', '+503 0000-0000');
+$contactEmail    = (string) Settings::get('email', 'contacto@barberiastyle.com');
+$contactAddress  = (string) Settings::get('address', 'Av. Principal 123, San Salvador');
+$whatsapp        = (string) Settings::get('whatsapp', '+503 0000-0000');
+$whatsappDigits  = preg_replace('/\D+/', '', $whatsapp);
+$socials         = SocialLink::active();
+$newsletterEnabled = Settings::getBool('newsletter_enabled', true);
+$newsletterTitle = (string) Settings::get('newsletter_title', 'Boletín');
+$newsletterText  = (string) Settings::get('newsletter_text', 'Recibe novedades, promociones y tips de estilo.');
+
+$hours = Settings::businessHours();
+$dayLabels = [
+    'monday'    => 'Lunes',
+    'tuesday'   => 'Martes',
+    'wednesday' => 'Miércoles',
+    'thursday'  => 'Jueves',
+    'friday'    => 'Viernes',
+    'saturday'  => 'Sábado',
+    'sunday'    => 'Domingo',
+];
+$weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+$allWeekdaysSame = true;
+$firstHours = $hours['monday'] ?? ['open' => '', 'close' => ''];
+foreach ($weekdays as $d) {
+    if (($hours[$d] ?? ['open' => '', 'close' => '']) !== $firstHours) {
+        $allWeekdaysSame = false;
+        break;
+    }
+}
+$hourRows = [];
+if ($allWeekdaysSame) {
+    $hourRows[] = ['label' => 'Lunes — Viernes', 'open' => $firstHours['open'], 'close' => $firstHours['close']];
+} else {
+    foreach ($weekdays as $d) {
+        $h = $hours[$d] ?? ['open' => '', 'close' => ''];
+        $hourRows[] = ['label' => $dayLabels[$d], 'open' => $h['open'], 'close' => $h['close']];
+    }
+}
+foreach (['saturday', 'sunday'] as $d) {
+    $h = $hours[$d] ?? ['open' => '', 'close' => ''];
+    $hourRows[] = ['label' => $dayLabels[$d], 'open' => $h['open'], 'close' => $h['close']];
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -14,7 +62,7 @@ $activeNav = $active ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Barbería Style — Cortes clásicos y modernos. Servicios profesionales, productos premium y un equipo experto.">
-    <title><?= View::e($pageTitle) ?> | Barbería Style</title>
+    <title><?= View::e($pageTitle) ?> | <?= View::e($siteName) ?></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,8 +105,8 @@ $activeNav = $active ?? '';
                         <i class="fa-solid fa-scissors text-gold"></i>
                     </span>
                     <span class="leading-tight">
-                        <span class="block font-display text-lg font-semibold tracking-wide text-goldlight">Barbería Style</span>
-                        <span class="block text-[10px] uppercase tracking-[.3em] text-cream/50">Estética masculina</span>
+                        <span class="block font-display text-lg font-semibold tracking-wide text-goldlight"><?= View::e($siteName) ?></span>
+                        <span class="block text-[10px] uppercase tracking-[.3em] text-cream/50"><?= View::e($siteTagline) ?></span>
                     </span>
                 </a>
 
@@ -107,27 +155,32 @@ $activeNav = $active ?? '';
                         <i class="fa-solid fa-scissors text-gold"></i>
                     </span>
                     <span>
-                        <span class="block font-display text-lg font-semibold text-goldlight">Barbería Style</span>
-                        <span class="block text-[10px] uppercase tracking-[.3em] text-cream/50">Estética masculina</span>
+                        <span class="block font-display text-lg font-semibold text-goldlight"><?= View::e($siteName) ?></span>
+                        <span class="block text-[10px] uppercase tracking-[.3em] text-cream/50"><?= View::e($siteTagline) ?></span>
                     </span>
                 </a>
                 <p class="mt-5 text-sm leading-relaxed text-cream/60">
-                    Calidad, precisión y estilo en cada corte. La barbería clásica con un toque moderno que marca la diferencia.
+                    <?= View::e($siteDescription) ?>
                 </p>
+                <?php if ($whatsappDigits !== '' || $socials !== []): ?>
                 <div class="mt-6 flex gap-3">
-                    <a href="#" aria-label="Instagram" class="w-10 h-10 rounded-lg border border-gold/20 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/50 hover:bg-gold/5 transition">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-                    <a href="#" aria-label="Facebook" class="w-10 h-10 rounded-lg border border-gold/20 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/50 hover:bg-gold/5 transition">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </a>
-                    <a href="#" aria-label="WhatsApp" class="w-10 h-10 rounded-lg border border-gold/20 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/50 hover:bg-gold/5 transition">
+                    <?php if ($whatsappDigits !== ''): ?>
+                    <a href="https://wa.me/<?= View::e($whatsappDigits) ?>" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp" class="w-10 h-10 rounded-lg border border-gold/20 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/50 hover:bg-gold/5 transition">
                         <i class="fa-brands fa-whatsapp"></i>
                     </a>
-                    <a href="#" aria-label="TikTok" class="w-10 h-10 rounded-lg border border-gold/20 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/50 hover:bg-gold/5 transition">
-                        <i class="fa-brands fa-tiktok"></i>
-                    </a>
+                    <?php endif; ?>
+                    <?php foreach ($socials as $social): ?>
+                        <?php
+                        $platform = (string) $social->getAttribute('platform');
+                        if ($platform === 'whatsapp') { continue; }
+                        $url = (string) $social->getAttribute('url');
+                        ?>
+                        <a href="<?= View::e($url) ?>" target="_blank" rel="noopener" aria-label="<?= View::e(SocialLink::labelFor($platform)) ?>" title="<?= View::e(SocialLink::labelFor($platform)) ?>" class="w-10 h-10 rounded-lg border border-gold/20 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/50 hover:bg-gold/5 transition">
+                            <i class="fa-brands <?= SocialLink::iconFor($platform) ?>"></i>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
 
             <div>
@@ -135,15 +188,15 @@ $activeNav = $active ?? '';
                 <ul class="space-y-4 text-sm text-cream/70">
                     <li class="flex items-start gap-3">
                         <i class="fa-solid fa-phone text-gold mt-1"></i>
-                        <span><?= View::e($settings['phone'] ?? '+503 0000-0000') ?></span>
+                        <span><?= View::e($contactPhone) ?></span>
                     </li>
                     <li class="flex items-start gap-3">
                         <i class="fa-solid fa-envelope text-gold mt-1"></i>
-                        <span><?= View::e($settings['email'] ?? 'contacto@barberiastyle.com') ?></span>
+                        <span><?= View::e($contactEmail) ?></span>
                     </li>
                     <li class="flex items-start gap-3">
                         <i class="fa-solid fa-location-dot text-gold mt-1"></i>
-                        <span><?= View::e($settings['address'] ?? 'Av. Principal 123, San Salvador') ?></span>
+                        <span><?= View::e($contactAddress) ?></span>
                     </li>
                 </ul>
             </div>
@@ -151,21 +204,21 @@ $activeNav = $active ?? '';
             <div>
                 <h4 class="text-xs font-bold uppercase tracking-[.25em] text-goldlight mb-5">Horarios</h4>
                 <ul class="space-y-3 text-sm text-cream/70">
-                    <li class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
-                        <span>Lunes — Viernes</span><span class="text-goldlight font-medium">09:00 – 20:00</span>
-                    </li>
-                    <li class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
-                        <span>Sábado</span><span class="text-goldlight font-medium">10:00 – 18:00</span>
-                    </li>
-                    <li class="flex items-center justify-between gap-4">
-                        <span>Domingo</span><span class="text-cream/40">Cerrado</span>
-                    </li>
+                    <?php foreach ($hourRows as $row): ?>
+                        <li class="flex items-center justify-between gap-4 border-b border-white/5 pb-3">
+                            <span><?= View::e($row['label']) ?></span>
+                            <span class="<?= $row['open'] !== '' ? 'text-goldlight font-medium' : 'text-cream/40' ?>">
+                                <?= $row['open'] !== '' ? View::e($row['open'] . ' – ' . $row['close']) : 'Cerrado' ?>
+                            </span>
+                        </li>
+                    <?php endforeach; ?>
                 </ul>
             </div>
 
+            <?php if ($newsletterEnabled): ?>
             <div>
-                <h4 class="text-xs font-bold uppercase tracking-[.25em] text-goldlight mb-5">Boletín</h4>
-                <p class="text-sm text-cream/60 leading-relaxed">Recibe novedades, promociones y tips de estilo.</p>
+                <h4 class="text-xs font-bold uppercase tracking-[.25em] text-goldlight mb-5"><?= View::e($newsletterTitle) ?></h4>
+                <p class="text-sm text-cream/60 leading-relaxed"><?= View::e($newsletterText) ?></p>
                 <form class="mt-5 flex rounded-lg overflow-hidden border border-gold/20 focus-within:border-gold/60 transition">
                     <input type="email" placeholder="Tu email" class="w-full bg-dark/60 px-4 py-3 text-sm outline-none placeholder:text-cream/30">
                     <button type="submit" class="px-4 bg-gold text-darkdeep font-semibold hover:bg-goldlight transition">
@@ -173,11 +226,12 @@ $activeNav = $active ?? '';
                     </button>
                 </form>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="border-t border-white/5 py-5">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-cream/40">
-                <p>&copy; <?= date('Y') ?> Barbería Style. Todos los derechos reservados.</p>
+                <p>&copy; <?= date('Y') ?> <?= View::e($siteName) ?>. Todos los derechos reservados.</p>
                 <p class="flex items-center gap-1.5"><i class="fa-solid fa-scissors text-gold/60"></i> Hecho con estilo</p>
             </div>
         </div>

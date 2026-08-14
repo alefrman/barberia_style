@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Helpers\Auth;
 use App\Helpers\Session;
+use App\Helpers\Settings;
 use App\Models\Appointment;
 use App\Models\AppointmentProduct;
 use App\Models\AppointmentService;
@@ -344,6 +345,7 @@ class AppointmentController extends Controller
             'barbers'    => $barbers,
             'types'      => $types,
             'statuses'   => $statuses,
+            'hours'      => Settings::businessHours(),
             'selectedServices' => $selectedServices,
             'selectedProducts' => $selectedProducts,
         ], 'admin');
@@ -432,6 +434,25 @@ class AppointmentController extends Controller
             $errors[] = 'Ingresa una hora de cita válida.';
         } elseif ($data['appointment_date'] === date('Y-m-d') && $data['appointment_time'] < date('H:i', strtotime('+1 hour'))) {
             $errors[] = 'Para citas de hoy, la hora debe ser al menos 1 hora después de la hora actual.';
+        }
+
+        // Restricción por horario de atención (días cerrados y rango de horas)
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['appointment_date']) && preg_match('/^\d{2}:\d{2}/', $data['appointment_time'])) {
+            $dayKey = ['mon' => 'monday', 'tue' => 'tuesday', 'wed' => 'wednesday', 'thu' => 'thursday', 'fri' => 'friday', 'sat' => 'saturday', 'sun' => 'sunday'][strtolower(date('D', strtotime($data['appointment_date'])))] ?? '';
+            $dayLabels = ['monday' => 'lunes', 'tuesday' => 'martes', 'wednesday' => 'miércoles', 'thursday' => 'jueves', 'friday' => 'viernes', 'saturday' => 'sábado', 'sunday' => 'domingo'];
+
+            if ($dayKey !== '') {
+                $hours = Settings::businessHours();
+                $range = $hours[$dayKey] ?? ['open' => '', 'close' => ''];
+                $open = (string) ($range['open'] ?? '');
+                $close = (string) ($range['close'] ?? '');
+
+                if ($open === '' || $close === '') {
+                    $errors[] = 'El negocio está cerrado los ' . $dayLabels[$dayKey] . '. Selecciona otro día.';
+                } elseif ($data['appointment_time'] < $open || $data['appointment_time'] >= $close) {
+                    $errors[] = 'La hora de cita debe estar dentro del horario de atención (' . $open . ' a ' . $close . ').';
+                }
+            }
         }
         if ($data['services'] === [] && $data['products'] === []) {
             $errors[] = 'Debes agregar al menos un servicio o un producto a la cita.';

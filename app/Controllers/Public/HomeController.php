@@ -11,7 +11,6 @@ use App\Models\Service;
 use App\Models\Product;
 use App\Models\Team;
 use App\Models\Gallery;
-use App\Models\Setting;
 
 /**
  * HomeController
@@ -30,14 +29,12 @@ class HomeController extends Controller
         $products  = $this->orderedProducts();
         $team      = Team::where(['is_active' => 1]);
         $gallery   = $this->orderedGallery();
-        $settings  = $this->getSettings();
 
         return $this->view('public/home/index', [
             'services' => $services,
             'products' => $products,
             'team'     => $team,
             'gallery'  => $gallery,
-            'settings' => $settings,
             'stats'    => [
                 'services' => Service::count(['is_active' => 1]),
                 'products' => Product::count(['is_active' => 1]),
@@ -146,18 +143,5 @@ class HomeController extends Controller
             fn($a, $b) => (int) $a->getAttribute('sort_order') <=> (int) $b->getAttribute('sort_order')
         );
         return $gallery;
-    }
-
-    /**
-     * Carga la configuración del sitio desde la tabla settings.
-     */
-    private function getSettings(): array
-    {
-        $rows = Setting::all();
-        $settings = [];
-        foreach ($rows as $setting) {
-            $settings[$setting->getAttribute('setting_key')] = $setting->getAttribute('setting_value');
-        }
-        return $settings;
     }
 }

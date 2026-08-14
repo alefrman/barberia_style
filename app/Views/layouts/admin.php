@@ -101,6 +101,9 @@ $flashes = Session::getFlashes();
             <a href="<?= ADMIN_URL ?>/users" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'users' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
                 <i class="fa-solid fa-user-shield w-5"></i><span class="nav-link-text">Usuarios</span>
             </a>
+            <a href="<?= ADMIN_URL ?>/settings" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'settings' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-gear w-5"></i><span class="nav-link-text">Configuración</span>
+            </a>
             <?php endif; ?>
             <a href="<?= APP_URL ?>/" target="_blank" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-cream/70 hover:bg-gold/5 hover:text-goldlight">
                 <i class="fa-solid fa-globe w-5"></i><span class="nav-link-text">Ver sitio web</span>
@@ -157,6 +160,7 @@ $flashes = Session::getFlashes();
                 <a href="<?= ADMIN_URL ?>/gallery" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Galería</a>
                 <?php if ($isSuperAdmin): ?>
                 <a href="<?= ADMIN_URL ?>/users" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Usuarios</a>
+                <a href="<?= ADMIN_URL ?>/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Configuración</a>
                 <?php endif; ?>
                 <div class="border-t border-white/5 pt-3 mt-3">
                     <a href="<?= ADMIN_URL ?>/logout" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400">Cerrar sesión</a>

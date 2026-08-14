@@ -67,6 +67,26 @@ document.querySelectorAll('form:not([data-inline-validation="off"])').forEach(fo
             }
         });
 
+        form.querySelectorAll('input[pattern]').forEach(field => {
+            const value = field.value.trim();
+            if (value === '') return;
+            let regex;
+            try {
+                regex = new RegExp('^(?:' + field.getAttribute('pattern') + ')$');
+            } catch (e) {
+                return;
+            }
+            if (!regex.test(value)) {
+                hasErrors = true;
+                if (!firstError) firstError = field;
+                field.classList.add('field-invalid', 'border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+                const p = document.createElement('p');
+                p.className = 'field-error mt-2 text-xs text-red-400';
+                p.textContent = field.getAttribute('title') || 'El campo ' + fieldLabel(field) + ' no tiene un formato válido.';
+                field.insertAdjacentElement('afterend', p);
+            }
+        });
+
         if (hasErrors) {
             e.preventDefault();
             if (firstError) {

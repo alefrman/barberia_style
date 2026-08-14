@@ -217,11 +217,11 @@ use App\Core\View;
                 <h2 class="mt-5 font-display text-4xl md:text-5xl font-semibold text-darkdeep">¿Listo para tu próximo corte?</h2>
                 <p class="mt-4 max-w-lg mx-auto text-darkdeep/80">Agenda con nosotros y descubre el nivel de detalle que marca la diferencia.</p>
                 <div class="mt-8 flex flex-wrap justify-center gap-4">
-                    <a href="#" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-darkdeep text-goldlight font-bold uppercase text-xs tracking-[.2em] hover:bg-dark transition shadow-xl btn-shine">
-                        <i class="fa-solid fa-calendar-check"></i> Agendar ahora
+                    <a href="https://wa.me/<?= View::e(preg_replace('/\D+/', '', (string) App\Helpers\Settings::get('whatsapp', ''))) ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-darkdeep text-goldlight font-bold uppercase text-xs tracking-[.2em] hover:bg-dark transition shadow-xl btn-shine">
+                        <i class="fa-brands fa-whatsapp"></i> Agendar ahora
                     </a>
-                    <a href="tel:<?= View::e($settings['phone'] ?? '') ?>" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg border-2 border-darkdeep text-darkdeep font-bold uppercase text-xs tracking-[.2em] hover:bg-darkdeep hover:text-goldlight transition">
-                        <i class="fa-solid fa-phone"></i> <?= View::e($settings['phone'] ?? '+503 0000-0000') ?>
+                    <a href="tel:<?= View::e(App\Helpers\Settings::get('phone', '')) ?>" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg border-2 border-darkdeep text-darkdeep font-bold uppercase text-xs tracking-[.2em] hover:bg-darkdeep hover:text-goldlight transition">
+                        <i class="fa-solid fa-phone"></i> <?= View::e(App\Helpers\Settings::get('phone', '+503 0000-0000')) ?>
                     </a>
                 </div>
             </div>

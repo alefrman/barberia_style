@@ -21,6 +21,7 @@ use App\Controllers\Admin\TeamController;
 use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\ExpenseController;
 use App\Controllers\Admin\GalleryController;
+use App\Controllers\Admin\SettingController;
 
 Config::load(BASE_PATH);
 require BASE_PATH . '/app/Config/config.php';
@@ -105,6 +106,14 @@ $router->post('/gallery/store', GalleryController::class . '@store', [AuthMiddle
 $router->get('/gallery/edit/{id}', GalleryController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/gallery/update/{id}', GalleryController::class . '@update', [AuthMiddleware::class]);
 $router->post('/gallery/delete/{id}', GalleryController::class . '@destroy', [AuthMiddleware::class]);
+
+// ============ MÓDULO CONFIGURACIÓN (solo Superadmin) ============
+$router->get('/settings', SettingController::class . '@index', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/content', SettingController::class . '@updateContent', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/contact', SettingController::class . '@updateContact', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/hours', SettingController::class . '@updateHours', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/social/store', SettingController::class . '@storeSocial', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/social/delete/{id}', SettingController::class . '@destroySocial', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
 
 $request = Request::createFromGlobals();
 $response = $router->dispatch($request);

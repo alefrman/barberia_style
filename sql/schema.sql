@@ -220,6 +220,16 @@ CREATE TABLE settings (
     updated_at    TIMESTAMP        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Redes sociales del sitio (iconos del footer)
+CREATE TABLE social_links (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    platform    VARCHAR(30)     NOT NULL UNIQUE,
+    url         VARCHAR(255)    NOT NULL DEFAULT '',
+    sort_order  INT UNSIGNED    NOT NULL DEFAULT 0,
+    created_at  TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================
 -- DATOS SEMILLA (Seed Data)
 -- ============================================================
@@ -251,4 +261,11 @@ INSERT INTO settings (setting_key, setting_value, description) VALUES
 ('longitude', '-89.2182', 'Coordenadas para mapa'),
 ('business_hours', '{"monday":{"open":"09:00","close":"20:00"},"tuesday":{"open":"09:00","close":"20:00"},"wednesday":{"open":"09:00","close":"20:00"},"thursday":{"open":"09:00","close":"20:00"},"friday":{"open":"09:00","close":"21:00"},"saturday":{"open":"10:00","close":"18:00"},"sunday":{"open":"","close":""}}', 'Horario de atención JSON'),
 ('tax_rate', '0', 'Impuesto (0%)'),
-('currency', 'USD', 'Moneda del sistema');
+('currency', 'USD', 'Moneda del sistema'),
+('whatsapp', '+503 0000-0000', 'Número de WhatsApp para link directo'),
+('site_name', 'Barbería Style', 'Nombre del sitio / marca'),
+('site_tagline', 'Estética masculina', 'Lema del sitio'),
+('site_description', 'Calidad, precisión y estilo en cada corte. La barbería clásica con un toque moderno que marca la diferencia.', 'Descripción del sitio'),
+('newsletter_title', 'Boletín', 'Título del bloque boletín'),
+('newsletter_text', 'Recibe novedades, promociones y tips de estilo.', 'Texto del bloque boletín'),
+('newsletter_enabled', '1', 'Mostrar bloque boletín (1=si, 0=no)');

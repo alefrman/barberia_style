@@ -5,11 +5,21 @@
 use App\Core\View;
 use App\Helpers\Session;
 use App\Helpers\Money;
+use App\Helpers\Settings;
 
 $isEditing = $editing !== null;
 $submitUrl = $isEditing
     ? ADMIN_URL . '/appointments/update/' . (int) $editing->getAttribute('id')
     : ADMIN_URL . '/appointments/store';
+
+$dayToIndex = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
+$jsHours = [];
+foreach (Settings::businessHours() as $dayKey => $range) {
+    $jsHours[$dayToIndex[$dayKey]] = [
+        'open'  => (string) ($range['open'] ?? ''),
+        'close' => (string) ($range['close'] ?? ''),
+    ];
+}
 ?>
 <div class="max-w-5xl">
     <div class="flex items-center gap-4 mb-8">
@@ -300,10 +310,44 @@ function minTimeStr() {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function updateTimeMin() {
-    if (dateInput && timeInput) {
-        timeInput.min = dateInput.value === todayStr() ? minTimeStr() : '';
+const businessHours = <?= json_encode($jsHours, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+const weekdayNames = { 0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miércoles', 4: 'jueves', 5: 'viernes', 6: 'sábado' };
+
+function dayIndexOf(dateStr) {
+    return new Date(dateStr + 'T00:00:00').getDay();
+}
+
+function rangeFor(dateStr) {
+    return businessHours[dayIndexOf(dateStr)] || { open: '', close: '' };
+}
+
+function isClosedDay(dateStr) {
+    const r = rangeFor(dateStr);
+    return r.open === '' || r.close === '';
+}
+
+function updateTimeConstraints() {
+    if (!dateInput || !timeInput) return;
+    if (dateInput.value === '') {
+        timeInput.min = '';
+        timeInput.max = '';
+        timeInput.disabled = false;
+        return;
     }
+    const r = rangeFor(dateInput.value);
+    if (r.open === '' || r.close === '') {
+        timeInput.min = '';
+        timeInput.max = '';
+        timeInput.disabled = true;
+        return;
+    }
+    timeInput.disabled = false;
+    let min = r.open;
+    if (dateInput.value === todayStr() && minTimeStr() > min) {
+        min = minTimeStr();
+    }
+    timeInput.min = min;
+    timeInput.max = r.close;
 }
 
 function syncTypeWithDate() {
@@ -319,10 +363,10 @@ function syncTypeWithDate() {
 }
 
 if (dateInput) {
-    dateInput.addEventListener('change', updateTimeMin);
+    dateInput.addEventListener('change', updateTimeConstraints);
     dateInput.addEventListener('change', syncTypeWithDate);
 }
-document.addEventListener('DOMContentLoaded', updateTimeMin);
+document.addEventListener('DOMContentLoaded', updateTimeConstraints);
 document.addEventListener('DOMContentLoaded', syncTypeWithDate);
 
 document.addEventListener('DOMContentLoaded', updateTotals);
@@ -377,6 +421,17 @@ appointmentForm.addEventListener('submit', function (e) {
         showError(dateInput, 'No puedes registrar citas en fechas pasadas.');
     } else if (dateInput.value === todayStr() && timeInput.value !== '' && timeInput.value < minTimeStr()) {
         showError(timeInput, 'La hora debe ser al menos 1 hora después de la hora actual.');
+    }
+
+    if (dateInput.value !== '' && isClosedDay(dateInput.value)) {
+        showError(dateInput, 'El negocio está cerrado los ' + weekdayNames[dayIndexOf(dateInput.value)] + '. Selecciona otro día.');
+    } else if (timeInput.value !== '') {
+        const r = rangeFor(dateInput.value);
+        if (r.open !== '' && r.close !== '') {
+            if (timeInput.value < r.open || timeInput.value >= r.close) {
+                showError(timeInput, 'La hora de cita debe estar dentro del horario de atención (' + r.open + ' a ' + r.close + ').');
+            }
+        }
     }
 
     const hasService = [...document.querySelectorAll('.service-select')].some(s => Number(s.value) > 0);
