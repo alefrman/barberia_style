@@ -271,7 +271,7 @@ INSERT INTO settings (setting_key, setting_value, description) VALUES
 ('newsletter_enabled', '1', 'Mostrar bloque boletín (1=si, 0=no)'),
 ('logo', '', 'Ruta del logo bajo uploads (vacío = icono por defecto)'),
 ('hero_eyebrow', 'Cortes y estética masculina', 'Línea superior de la portada'),
-('hero_title', 'Elegancia que<br>se lleva <em class="text-gold-grad italic">con actitud</em>', 'Título de la portada (acepta HTML simple)'),
+('hero_title', CONCAT('Elegancia que', CHAR(10), 'se lleva *con actitud*'), 'Título de la portada (texto plano; *asteriscos* = dorado, salto de línea = <br>)'),
 ('hero_subtitle', 'Cortes de precisión, barba esculpida y productos premium. Un equipo de barberos apasionados que transforma tu imagen en cada visita.', 'Descripción breve de la portada'),
 ('hero_image', '', 'Ruta de la imagen de portada bajo uploads (vacío = imagen por defecto)'),
 ('marquee_items', '["Cortes de autor","Barba","Tinte","Acabados premium","Productos originales"]', 'Items de la cinta animada (JSON)');

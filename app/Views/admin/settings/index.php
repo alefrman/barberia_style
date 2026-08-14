@@ -153,9 +153,13 @@ use App\Models\SocialLink;
             </div>
 
             <div>
-                <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="hero_title">Título * (acepta &lt;br&gt; y &lt;em&gt; para resaltar en dorado)</label>
-                <textarea id="hero_title" name="hero_title" rows="3" required placeholder="Elegancia que<br>se lleva <em>con actitud</em>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 placeholder:text-cream/30 font-mono"><?= View::e($values['hero_title']) ?></textarea>
-                <p class="mt-1 text-[11px] text-cream/40">Ej: Elegancia que &lt;br&gt; se lleva &lt;em&gt;con actitud&lt;/em&gt;</p>
+                <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="hero_title">Título *</label>
+                <textarea id="hero_title" name="hero_title" rows="3" required placeholder="Elegancia, Profesionalismo en cada trabajo&#10;Realizado con *estilo*" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 placeholder:text-cream/30 font-mono"><?= View::e($values['hero_title']) ?></textarea>
+                <p class="mt-1 text-[11px] text-cream/40">Escribe normal: cada línea es una línea. Envuelve en *asteriscos* la parte que quieras en dorado.</p>
+                <div id="hero-preview-box" class="hidden mt-3 rounded-xl border border-gold/20 bg-dark/40 p-4">
+                    <p class="text-[10px] uppercase tracking-[.2em] text-cream/40 mb-2">Vista previa</p>
+                    <div id="hero-preview-title" class="font-display text-2xl font-semibold leading-snug text-white"></div>
+                </div>
             </div>
 
             <div>
@@ -411,4 +415,23 @@ use App\Models\SocialLink;
 
     bindImagePreview('logo', 'logo-preview');
     bindImagePreview('hero_image', 'hero-preview');
+
+    const heroTitleInput = document.getElementById('hero_title');
+    const heroPreviewBox = document.getElementById('hero-preview-box');
+    const heroPreviewTitle = document.getElementById('hero-preview-title');
+    if (heroTitleInput && heroPreviewBox && heroPreviewTitle) {
+        const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const renderPreview = (s) => escapeHtml(s).replace(/\*([^*]+)\*/g, '<em class="text-gold-grad italic">$1</em>').replace(/\n/g, '<br>');
+        const updatePreview = () => {
+            const v = heroTitleInput.value.trim();
+            if (v === '') {
+                heroPreviewBox.classList.add('hidden');
+                return;
+            }
+            heroPreviewBox.classList.remove('hidden');
+            heroPreviewTitle.innerHTML = renderPreview(v);
+        };
+        heroTitleInput.addEventListener('input', updatePreview);
+        updatePreview();
+    }
 </script>

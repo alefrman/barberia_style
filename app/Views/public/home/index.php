@@ -5,9 +5,10 @@
  */
 use App\Core\View;
 use App\Helpers\Settings;
+use App\Helpers\Text;
 
 $heroEyebrow  = (string) Settings::get('hero_eyebrow', 'Cortes y estética masculina');
-$heroTitle    = (string) Settings::get('hero_title', 'Elegancia que<br>se lleva <em class="text-gold-grad italic">con actitud</em>');
+$heroTitle    = (string) Settings::get('hero_title', "Elegancia que\nse lleva *con actitud*");
 $heroSubtitle = (string) Settings::get('hero_subtitle', 'Cortes de precisión, barba esculpida y productos premium. Un equipo de barberos apasionados que transforma tu imagen en cada visita.');
 $heroImage    = (string) Settings::get('hero_image', '');
 $heroImageUrl = $heroImage !== '' ? UPLOAD_DIR . View::e($heroImage) : APP_URL . '/assets/img/cortehombre1.png';
@@ -24,7 +25,7 @@ $marqueeItems = Settings::marqueeItems();
                 </span>
 
                 <h1 class="reveal mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05]" style="--delay:100ms">
-                    <?= $heroTitle ?>
+                    <?= Text::markup($heroTitle) ?>
                 </h1>
 
                 <p class="reveal mt-6 max-w-xl text-lg leading-relaxed text-cream/75" style="--delay:200ms">
