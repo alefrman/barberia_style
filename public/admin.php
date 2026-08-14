@@ -69,6 +69,7 @@ $router->get('/services/create', ServiceController::class . '@create', [AuthMidd
 $router->post('/services/store', ServiceController::class . '@store', [AuthMiddleware::class]);
 $router->get('/services/edit/{id}', ServiceController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/services/update/{id}', ServiceController::class . '@update', [AuthMiddleware::class]);
+$router->post('/services/toggle/{id}', ServiceController::class . '@toggle', [AuthMiddleware::class]);
 $router->post('/services/delete/{id}', ServiceController::class . '@destroy', [AuthMiddleware::class]);
 
 // ============ MÓDULO BARBEROS ============

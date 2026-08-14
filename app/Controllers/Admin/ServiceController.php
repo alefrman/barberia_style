@@ -155,6 +155,27 @@ class ServiceController extends Controller
         return $this->redirect('/admin.php/services');
     }
 
+    public function toggle(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/services');
+        }
+
+        $id = (int) ($params['id'] ?? 0);
+        $service = Service::find($id);
+
+        if ($service === null) {
+            Session::flash('error', 'Servicio no encontrado.');
+            return $this->redirect('/admin.php/services');
+        }
+
+        $active = (int) $service->getAttribute('is_active') === 1 ? 0 : 1;
+        Service::updateWhere(['id' => $id], ['is_active' => $active]);
+
+        Session::flash('success', $active ? 'Servicio activado.' : 'Servicio desactivado.');
+        return $this->redirect('/admin.php/services');
+    }
+
     /**
      * Elimina un servicio.
      */

@@ -99,10 +99,7 @@ $values = $isEditing ? $editing->toArray() : [
             </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-2">
-            <input type="checkbox" id="is_active" name="is_active" value="1" <?= (int) ($values['is_active'] ?? 1) === 1 ? 'checked' : '' ?> class="w-5 h-5 rounded border-white/20 bg-dark accent-gold cursor-pointer">
-            <label for="is_active" class="text-sm text-cream/80 cursor-pointer">Servicio activo (visible en el sitio web)</label>
-        </div>
+        <input type="hidden" name="is_active" value="<?= (int) ($values['is_active'] ?? 1) ?>">
 
         <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold text-darkdeep font-bold uppercase text-xs tracking-[.2em] hover:bg-goldlight transition shadow-lg shadow-gold/20 btn-shine">
