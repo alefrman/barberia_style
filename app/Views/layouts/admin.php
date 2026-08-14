@@ -48,66 +48,80 @@ $flashes = Session::getFlashes();
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('bs_admin_sidebar') === 'collapsed') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body class="bg-darkdeep text-white min-h-screen">
 
     <!-- ============ SIDEBAR (desktop) ============ -->
-    <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-darksoft border-r border-gold/10 z-40">
-        <div class="flex items-center gap-3 px-6 h-18 py-5 border-b border-white/5">
+    <aside class="admin-sidebar hidden lg:flex fixed inset-y-0 left-0 flex-col bg-darksoft border-r border-gold/10 z-40">
+        <div class="admin-brand flex items-center gap-3 px-6 h-18 py-5 border-b border-white/5">
             <span class="w-10 h-10 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center">
                 <i class="fa-solid fa-scissors text-gold"></i>
             </span>
-            <div>
+            <div class="admin-brand-text">
                 <p class="font-display text-base font-semibold text-goldlight leading-tight">Barbería Style</p>
                 <p class="text-[10px] uppercase tracking-[.25em] text-cream/50">Panel admin</p>
             </div>
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <p class="px-3 pb-2 text-[10px] uppercase tracking-[.25em] text-cream/40">Gestión</p>
-            <a href="<?= ADMIN_URL ?>/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'dashboard' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-gauge-high w-5"></i>Dashboard
+            <p class="nav-section-label px-3 pb-2 text-[10px] uppercase tracking-[.25em] text-cream/40">Gestión</p>
+            <a href="<?= ADMIN_URL ?>/dashboard" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'dashboard' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-gauge-high w-5"></i><span class="nav-link-text">Dashboard</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/appointments" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'appointments' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-calendar-check w-5"></i>Citas
+            <a href="<?= ADMIN_URL ?>/appointments" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'appointments' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-calendar-check w-5"></i><span class="nav-link-text">Citas</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/inventory" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'inventory' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-boxes-stacked w-5"></i>Inventario
+            <a href="<?= ADMIN_URL ?>/inventory" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'inventory' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-boxes-stacked w-5"></i><span class="nav-link-text">Inventario</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/services" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'services' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-scissors w-5"></i>Servicios
+            <a href="<?= ADMIN_URL ?>/services" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'services' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-scissors w-5"></i><span class="nav-link-text">Servicios</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/team" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'team' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-user-tie w-5"></i>Barberos
+            <a href="<?= ADMIN_URL ?>/team" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'team' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-user-tie w-5"></i><span class="nav-link-text">Barberos</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/expenses" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'expenses' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-money-bill-transfer w-5"></i>Gastos
+            <a href="<?= ADMIN_URL ?>/expenses" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'expenses' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-money-bill-transfer w-5"></i><span class="nav-link-text">Gastos</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/gallery" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'gallery' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-images w-5"></i>Galería
+            <a href="<?= ADMIN_URL ?>/gallery" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'gallery' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-images w-5"></i><span class="nav-link-text">Galería</span>
             </a>
 
-            <p class="px-3 pt-6 pb-2 text-[10px] uppercase tracking-[.25em] text-cream/40">Sistema</p>
+            <p class="nav-section-label px-3 pt-6 pb-2 text-[10px] uppercase tracking-[.25em] text-cream/40">Sistema</p>
             <?php if ($isSuperAdmin): ?>
-            <a href="<?= ADMIN_URL ?>/users" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'users' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
-                <i class="fa-solid fa-user-shield w-5"></i>Usuarios
+            <a href="<?= ADMIN_URL ?>/users" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'users' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-user-shield w-5"></i><span class="nav-link-text">Usuarios</span>
             </a>
             <?php endif; ?>
-            <a href="<?= APP_URL ?>/" target="_blank" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-cream/70 hover:bg-gold/5 hover:text-goldlight">
-                <i class="fa-solid fa-globe w-5"></i>Ver sitio web
+            <a href="<?= APP_URL ?>/" target="_blank" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-cream/70 hover:bg-gold/5 hover:text-goldlight">
+                <i class="fa-solid fa-globe w-5"></i><span class="nav-link-text">Ver sitio web</span>
             </a>
-            <a href="<?= ADMIN_URL ?>/logout" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-red-400 hover:bg-red-500/10">
-                <i class="fa-solid fa-right-from-bracket w-5"></i>Cerrar sesión
+            <a href="<?= ADMIN_URL ?>/logout" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-red-400 hover:bg-red-500/10">
+                <i class="fa-solid fa-right-from-bracket w-5"></i><span class="nav-link-text">Cerrar sesión</span>
             </a>
         </nav>
     </aside>
 
     <!-- ============ BARRA SUPERIOR ============ -->
-    <header class="lg:pl-64 fixed top-0 inset-x-0 z-30 bg-darkdeep/90 backdrop-blur-xl border-b border-gold/10">
+    <header class="admin-topbar fixed top-0 inset-x-0 z-30 bg-darkdeep/90 backdrop-blur-xl border-b border-gold/10">
         <div class="flex items-center justify-between h-16 px-4 sm:px-6">
-            <button id="btn-admin-menu" class="lg:hidden text-goldlight text-xl p-2" aria-label="Abrir menú">
-                <i class="fa-solid fa-bars"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button id="btn-admin-menu" class="lg:hidden text-goldlight text-xl p-2" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <button id="btn-sidebar-toggle" class="admin-sidebar-toggle hidden lg:flex items-center justify-center w-9 h-9 rounded-lg border border-gold/30 text-gold hover:text-goldlight hover:border-gold/60 hover:bg-gold/10 transition" aria-label="Alternar menú">
+                    <i class="fa-solid fa-angles-left text-sm"></i>
+                </button>
+            </div>
             <h1 class="font-display text-lg sm:text-xl font-semibold text-white hidden sm:block">
                 <?= View::e($pageTitle) ?>
             </h1>
@@ -152,7 +166,7 @@ $flashes = Session::getFlashes();
     </div>
 
     <!-- ============ CONTENIDO ============ -->
-    <main class="lg:pl-64 pt-16 min-h-screen">
+    <main class="admin-main pt-16 min-h-screen">
         <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             <?php
             // Mensajes flash
@@ -172,6 +186,35 @@ $flashes = Session::getFlashes();
     <script>
         document.getElementById('btn-admin-menu')?.addEventListener('click', () => {
             document.getElementById('admin-mobile-menu')?.classList.toggle('hidden');
+        });
+
+        document.getElementById('btn-sidebar-toggle')?.addEventListener('click', () => {
+            const root = document.documentElement;
+            root.classList.toggle('sidebar-collapsed');
+            try {
+                localStorage.setItem('bs_admin_sidebar', root.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded');
+            } catch (e) {}
+        });
+
+        const adminTooltip = document.createElement('div');
+        adminTooltip.className = 'admin-tooltip';
+        document.body.appendChild(adminTooltip);
+
+        const showAdminTooltip = (link) => {
+            if (!document.documentElement.classList.contains('sidebar-collapsed')) return;
+            const label = link.querySelector('.nav-link-text');
+            if (!label) return;
+            adminTooltip.textContent = label.textContent.trim();
+            const r = link.getBoundingClientRect();
+            adminTooltip.style.left = (r.right + 12) + 'px';
+            adminTooltip.style.top = (r.top + r.height / 2) + 'px';
+            adminTooltip.classList.add('show');
+        };
+        const hideAdminTooltip = () => adminTooltip.classList.remove('show');
+
+        document.querySelectorAll('.admin-nav-link').forEach((link) => {
+            link.addEventListener('mouseenter', () => showAdminTooltip(link));
+            link.addEventListener('mouseleave', hideAdminTooltip);
         });
     </script>
 </body>

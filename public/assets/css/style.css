@@ -156,3 +156,67 @@ body {
     transition: opacity .4s ease;
 }
 .gallery-item:hover .gallery-overlay { opacity: 1; }
+
+/* ---------- Sidebar admin colapsable ---------- */
+.admin-sidebar {
+    width: 18rem;
+    transition: width .25s ease;
+}
+.admin-topbar,
+.admin-main {
+    transition: padding-left .25s ease;
+}
+.admin-sidebar-toggle i {
+    transition: transform .25s ease;
+}
+
+@media (min-width: 1024px) {
+    .admin-topbar { padding-left: 18rem; }
+    .admin-main   { padding-left: 18rem; }
+
+    html.sidebar-collapsed .admin-sidebar { width: 5rem; }
+    html.sidebar-collapsed .admin-topbar  { padding-left: 5rem; }
+    html.sidebar-collapsed .admin-main    { padding-left: 5rem; }
+
+    /* Oculta textos y centra los íconos */
+    html.sidebar-collapsed .admin-sidebar .admin-brand {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    html.sidebar-collapsed .admin-sidebar .admin-brand-text,
+    html.sidebar-collapsed .admin-sidebar .nav-section-label,
+    html.sidebar-collapsed .admin-sidebar .nav-link-text { display: none; }
+
+    html.sidebar-collapsed .admin-sidebar nav {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    html.sidebar-collapsed .admin-sidebar .admin-nav-link {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    /* Rotación del ícono del toggle */
+    html.sidebar-collapsed .admin-sidebar-toggle i { transform: rotate(180deg); }
+}
+
+/* Tooltip del menú colapsado (position: fixed evita que el scroll del nav lo recorte) */
+.admin-tooltip {
+    position: fixed;
+    transform: translateY(-50%);
+    padding: .375rem .75rem;
+    white-space: nowrap;
+    font-size: .75rem;
+    border-radius: .5rem;
+    background: var(--dark-soft);
+    border: 1px solid rgba(245, 158, 11, .25);
+    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, .7);
+    color: var(--cream);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease;
+}
+.admin-tooltip.show { opacity: 1; }
