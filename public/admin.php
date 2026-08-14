@@ -77,6 +77,7 @@ $router->get('/team/create', TeamController::class . '@create', [AuthMiddleware:
 $router->post('/team/store', TeamController::class . '@store', [AuthMiddleware::class]);
 $router->get('/team/edit/{id}', TeamController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/team/update/{id}', TeamController::class . '@update', [AuthMiddleware::class]);
+$router->post('/team/toggle/{id}', TeamController::class . '@toggle', [AuthMiddleware::class]);
 $router->post('/team/delete/{id}', TeamController::class . '@destroy', [AuthMiddleware::class]);
 
 // ============ MÓDULO INVENTARIO ============
@@ -85,6 +86,7 @@ $router->get('/inventory/create', ProductController::class . '@create', [AuthMid
 $router->post('/inventory/store', ProductController::class . '@store', [AuthMiddleware::class]);
 $router->get('/inventory/edit/{id}', ProductController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/inventory/update/{id}', ProductController::class . '@update', [AuthMiddleware::class]);
+$router->post('/inventory/toggle/{id}', ProductController::class . '@toggle', [AuthMiddleware::class]);
 $router->post('/inventory/delete/{id}', ProductController::class . '@destroy', [AuthMiddleware::class]);
 
 // ============ MÓDULO GASTOS ============

@@ -103,5 +103,6 @@ use App\Core\View;
             icon.className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
         });
     </script>
+    <script src="<?= APP_URL ?>/assets/js/form-validation.js"></script>
 </body>
 </html>

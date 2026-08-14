@@ -52,11 +52,17 @@ use App\Helpers\Session;
                     </td>
                     <td class="px-6 py-4 text-cream/70"><?= (int) $r['sort_order'] ?></td>
                     <td class="px-6 py-4">
-                        <?php if ((int) $r['is_active'] === 1): ?>
-                            <span class="flex items-center gap-2 text-emerald-400"><i class="fa-solid fa-circle text-[8px]"></i>Activo</span>
-                        <?php else: ?>
-                            <span class="flex items-center gap-2 text-red-400"><i class="fa-solid fa-circle text-[8px]"></i>Inactivo</span>
-                        <?php endif; ?>
+                        <form method="POST" action="<?= ADMIN_URL ?>/team/toggle/<?= (int) $r['id'] ?>" class="flex items-center gap-2">
+                            <input type="hidden" name="_csrf" value="<?= View::e(Session::csrfToken()) ?>">
+                            <label class="relative inline-flex items-center cursor-pointer" title="<?= (int) $r['is_active'] === 1 ? 'Desactivar barbero' : 'Activar barbero' ?>">
+                                <input type="checkbox" class="sr-only peer" <?= (int) $r['is_active'] === 1 ? 'checked' : '' ?> onchange="this.form.submit()" aria-label="Cambiar estado">
+                                <div class="w-11 h-6 rounded-full bg-dark border border-white/20 peer-checked:bg-gold peer-checked:border-gold transition"></div>
+                                <div class="absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-cream peer-checked:translate-x-5 peer-checked:bg-darkdeep transition-transform pointer-events-none"></div>
+                            </label>
+                            <span class="text-xs <?= (int) $r['is_active'] === 1 ? 'text-emerald-400' : 'text-red-400' ?>">
+                                <?= (int) $r['is_active'] === 1 ? 'Activo' : 'Inactivo' ?>
+                            </span>
+                        </form>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2">

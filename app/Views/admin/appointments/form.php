@@ -22,7 +22,7 @@ $submitUrl = $isEditing
         </div>
     </div>
 
-    <form method="POST" action="<?= $submitUrl ?>" class="space-y-6" id="appointment-form" novalidate>
+    <form method="POST" action="<?= $submitUrl ?>" class="space-y-6" id="appointment-form" novalidate data-inline-validation="off">
         <input type="hidden" name="_csrf" value="<?= View::e(Session::csrfToken()) ?>">
 
         <!-- ======== Datos del cliente y cita ======== -->
@@ -141,8 +141,10 @@ $submitUrl = $isEditing
                         <select name="product_id[]" required class="product-select w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 cursor-pointer">
                             <option value="">Selecciona un producto</option>
                             <?php foreach ($products as $prd): ?>
-                                <option value="<?= (int) $prd->getAttribute('id') ?>" data-price="<?= (float) $prd->getAttribute('price') ?>" data-stock="<?= (int) $prd->getAttribute('stock') ?>" <?= (int) $pv['product_id'] === (int) $prd->getAttribute('id') ? 'selected' : '' ?>>
-                                    <?= View::e($prd->getAttribute('name')) ?> — <?= Money::format((float) $prd->getAttribute('price')) ?> (stock <?= (int) $prd->getAttribute('stock') ?>)
+                                <?php $prdStock = (int) $prd->getAttribute('stock'); ?>
+                                <?php $prdSelected = (int) $pv['product_id'] === (int) $prd->getAttribute('id'); ?>
+                                <option value="<?= (int) $prd->getAttribute('id') ?>" data-price="<?= (float) $prd->getAttribute('price') ?>" data-stock="<?= $prdStock ?>" <?= $prdSelected ? 'selected' : '' ?> <?= $prdStock <= 0 && !$prdSelected ? 'disabled' : '' ?>>
+                                    <?= View::e($prd->getAttribute('name')) ?> — <?= Money::format((float) $prd->getAttribute('price')) ?> (stock <?= $prdStock ?><?= $prdStock <= 0 ? ' · agotado' : '' ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -198,7 +200,8 @@ const barbersOptions = `<?php
 const productsOptions = `<?php
     $opts = '<option value="">Selecciona un producto</option>';
     foreach ($products as $prd) {
-        $opts .= '<option value="' . (int) $prd->getAttribute('id') . '" data-price="' . (float) $prd->getAttribute('price') . '" data-stock="' . (int) $prd->getAttribute('stock') . '">' . htmlspecialchars((string) $prd->getAttribute('name')) . ' — ' . App\Helpers\Money::format((float) $prd->getAttribute('price')) . ' (stock ' . (int) $prd->getAttribute('stock') . ')</option>';
+        $stock = (int) $prd->getAttribute('stock');
+        $opts .= '<option value="' . (int) $prd->getAttribute('id') . '" data-price="' . (float) $prd->getAttribute('price') . '" data-stock="' . $stock . '"' . ($stock <= 0 ? ' disabled' : '') . '>' . htmlspecialchars((string) $prd->getAttribute('name')) . ' — ' . App\Helpers\Money::format((float) $prd->getAttribute('price')) . ' (stock ' . $stock . ($stock <= 0 ? ' · agotado' : '') . ')</option>';
     }
     echo $opts;
 ?>`;
@@ -381,6 +384,20 @@ appointmentForm.addEventListener('submit', function (e) {
     if (!hasService && !hasProduct) {
         showError(document.getElementById('services-container'), 'Debes agregar al menos un servicio o un producto a la cita.');
     }
+
+    document.querySelectorAll('.product-row').forEach(row => {
+        const sel = row.querySelector('.product-select');
+        const qtyEl = row.querySelector('.product-qty');
+        if (Number(sel.value) <= 0) return;
+        const opt = sel.selectedOptions[0];
+        const stock = opt ? Number(opt.dataset.stock || 0) : 0;
+        const qty = Math.max(1, parseInt(qtyEl.value || 1, 10));
+        if (stock <= 0) {
+            showError(sel, 'El producto seleccionado está agotado y no se puede agregar a la cita.');
+        } else if (qty > stock) {
+            showError(qtyEl, 'Solo hay ' + stock + ' unidades disponibles de este producto.');
+        }
+    });
 
     if (hasErrors) {
         e.preventDefault();

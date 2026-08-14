@@ -146,6 +146,30 @@ class TeamController extends Controller
     }
 
     /**
+     * Activa/desactiva un barbero desde el listado.
+     */
+    public function toggle(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/team');
+        }
+
+        $id = (int) ($params['id'] ?? 0);
+        $team = Team::find($id);
+
+        if ($team === null) {
+            Session::flash('error', 'Barbero no encontrado.');
+            return $this->redirect('/admin.php/team');
+        }
+
+        $active = (int) $team->getAttribute('is_active') === 1 ? 0 : 1;
+        Team::updateWhere(['id' => $id], ['is_active' => $active]);
+
+        Session::flash('success', $active ? 'Barbero activado.' : 'Barbero desactivado.');
+        return $this->redirect('/admin.php/team');
+    }
+
+    /**
      * Elimina un barbero.
      */
     public function destroy(Request $request, array $params): Response

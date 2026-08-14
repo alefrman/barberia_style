@@ -95,7 +95,7 @@ class ProductController extends Controller
         }
 
         $data = $this->extractProduct($request);
-        $errors = $this->validateProduct($data);
+        $errors = $this->validateProduct($data, 1);
 
         if ($errors !== []) {
             Session::flash('error', $errors[0]);
@@ -197,6 +197,30 @@ class ProductController extends Controller
     }
 
     /**
+     * Activa/desactiva un producto desde el listado.
+     */
+    public function toggle(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/inventory');
+        }
+
+        $id = (int) ($params['id'] ?? 0);
+        $product = Product::find($id);
+
+        if ($product === null) {
+            Session::flash('error', 'Producto no encontrado.');
+            return $this->redirect('/admin.php/inventory');
+        }
+
+        $active = (int) $product->getAttribute('is_active') === 1 ? 0 : 1;
+        Product::updateWhere(['id' => $id], ['is_active' => $active]);
+
+        Session::flash('success', $active ? 'Producto activado.' : 'Producto desactivado.');
+        return $this->redirect('/admin.php/inventory');
+    }
+
+    /**
      * Elimina un producto.
      */
     public function destroy(Request $request, array $params): Response
@@ -275,7 +299,7 @@ class ProductController extends Controller
         ];
     }
 
-    private function validateProduct(array $data): array
+    private function validateProduct(array $data, int $stockMin = 0): array
     {
         $errors = [];
 
@@ -293,8 +317,10 @@ class ProductController extends Controller
             $errors[] = 'El costo no puede ser negativo.';
         }
 
-        if ($data['stock'] < 0) {
-            $errors[] = 'El stock no puede ser negativo.';
+        if ($data['stock'] < $stockMin) {
+            $errors[] = $stockMin > 0
+                ? 'El stock debe ser al menos ' . $stockMin . ' unidad.'
+                : 'El stock no puede ser negativo.';
         }
 
         if ($data['min_stock'] < 0) {

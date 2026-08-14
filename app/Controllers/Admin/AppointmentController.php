@@ -119,9 +119,7 @@ class AppointmentController extends Controller
         if ($errors !== []) {
             Session::flash('error', $errors[0]);
             return $this->redirect('/admin.php/appointments/create');
-        }
-
-        Database::beginTransaction();
+        }        Database::beginTransaction();
         try {
             $appointment = Appointment::create([
                 'type_id'    => $data['type_id'],
@@ -228,7 +226,7 @@ class AppointmentController extends Controller
         }
 
         $data = $this->extractAppointment($request);
-        $errors = $this->validateAppointment($data);
+        $errors = $this->validateAppointment($data, $id);
 
         if ($errors !== []) {
             Session::flash('error', $errors[0]);
@@ -394,8 +392,9 @@ class AppointmentController extends Controller
 
     /**
      * Validación de la cita.
+     * $appointmentId: id de la cita al editar (para restar el stock ya descontado por esa cita).
      */
-    private function validateAppointment(array $data): array
+    private function validateAppointment(array $data, ?int $appointmentId = null): array
     {
         $errors = [];
 
@@ -436,6 +435,30 @@ class AppointmentController extends Controller
         }
         if ($data['services'] === [] && $data['products'] === []) {
             $errors[] = 'Debes agregar al menos un servicio o un producto a la cita.';
+        }
+
+        foreach ($data['products'] as $productRow) {
+            $product = Product::find($productRow['id']);
+            if ($product === null) {
+                continue;
+            }
+            $name = (string) $product->getAttribute('name');
+            $stock = (int) $product->getAttribute('stock');
+
+            $previousQty = 0;
+            if ($appointmentId !== null) {
+                $previousQty = (int) (Database::fetchValue(
+                    "SELECT COALESCE(SUM(quantity), 0) FROM appointment_products WHERE appointment_id = :aid AND product_id = :pid",
+                    ['aid' => $appointmentId, 'pid' => $productRow['id']]
+                ) ?? 0);
+            }
+            $available = $stock + $previousQty;
+
+            if ($available <= 0) {
+                $errors[] = 'El producto "' . $name . '" está agotado y no se puede agregar a la cita.';
+            } elseif ($productRow['quantity'] > $available) {
+                $errors[] = 'Solo hay ' . $available . ' unidades disponibles de "' . $name . '".';
+            }
         }
 
         return $errors;

@@ -11,7 +11,7 @@ $submitUrl = $isEditing
     : ADMIN_URL . '/inventory/store';
 $values = $isEditing ? $editing->toArray() : [
     'name' => '', 'description' => '', 'price' => '', 'cost' => 0,
-    'stock' => 0, 'min_stock' => 5, 'category_id' => 0, 'image' => '',
+    'stock' => 1, 'min_stock' => 5, 'category_id' => 0, 'image' => '',
     'is_active' => 1, 'sort_order' => 0,
 ];
 ?>
@@ -78,7 +78,7 @@ $values = $isEditing ? $editing->toArray() : [
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
                 <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="stock">Stock (unidades) *</label>
-                <input type="number" id="stock" name="stock" required min="0" value="<?= (int) ($values['stock'] ?? 0) ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
+                <input type="number" id="stock" name="stock" required min="<?= $isEditing ? 0 : 1 ?>" value="<?= (int) ($values['stock'] ?? 1) ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
             </div>
             <div>
                 <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="min_stock">Stock mínimo <span class="text-cream/40 normal-case">(aviso)</span></label>
@@ -111,10 +111,7 @@ $values = $isEditing ? $editing->toArray() : [
             </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-2">
-            <input type="checkbox" id="is_active" name="is_active" value="1" <?= (int) ($values['is_active'] ?? 1) === 1 ? 'checked' : '' ?> class="w-5 h-5 rounded border-white/20 bg-dark accent-gold cursor-pointer">
-            <label for="is_active" class="text-sm text-cream/80 cursor-pointer">Producto activo (visible en el sitio web)</label>
-        </div>
+        <input type="hidden" name="is_active" value="<?= (int) ($values['is_active'] ?? 1) ?>">
 
         <div class="pt-4 flex flex-col sm:flex-row gap-3">
             <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold text-darkdeep font-bold uppercase text-xs tracking-[.2em] hover:bg-goldlight transition shadow-lg shadow-gold/20 btn-shine">

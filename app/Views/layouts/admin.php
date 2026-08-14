@@ -217,5 +217,6 @@ $flashes = Session::getFlashes();
             link.addEventListener('mouseleave', hideAdminTooltip);
         });
     </script>
+    <script src="<?= APP_URL ?>/assets/js/form-validation.js"></script>
 </body>
 </html>
