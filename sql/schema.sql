@@ -268,4 +268,10 @@ INSERT INTO settings (setting_key, setting_value, description) VALUES
 ('site_description', 'Calidad, precisión y estilo en cada corte. La barbería clásica con un toque moderno que marca la diferencia.', 'Descripción del sitio'),
 ('newsletter_title', 'Boletín', 'Título del bloque boletín'),
 ('newsletter_text', 'Recibe novedades, promociones y tips de estilo.', 'Texto del bloque boletín'),
-('newsletter_enabled', '1', 'Mostrar bloque boletín (1=si, 0=no)');
+('newsletter_enabled', '1', 'Mostrar bloque boletín (1=si, 0=no)'),
+('logo', '', 'Ruta del logo bajo uploads (vacío = icono por defecto)'),
+('hero_eyebrow', 'Cortes y estética masculina', 'Línea superior de la portada'),
+('hero_title', 'Elegancia que<br>se lleva <em class="text-gold-grad italic">con actitud</em>', 'Título de la portada (acepta HTML simple)'),
+('hero_subtitle', 'Cortes de precisión, barba esculpida y productos premium. Un equipo de barberos apasionados que transforma tu imagen en cada visita.', 'Descripción breve de la portada'),
+('hero_image', '', 'Ruta de la imagen de portada bajo uploads (vacío = imagen por defecto)'),
+('marquee_items', '["Cortes de autor","Barba","Tinte","Acabados premium","Productos originales"]', 'Items de la cinta animada (JSON)');

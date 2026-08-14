@@ -11,6 +11,7 @@ use App\Core\Response;
 use App\Helpers\Auth;
 use App\Helpers\Session;
 use App\Helpers\Settings;
+use App\Helpers\Upload;
 use App\Models\SocialLink;
 
 /**
@@ -30,6 +31,7 @@ class SettingController extends Controller
             'site_name', 'site_tagline', 'site_description',
             'newsletter_title', 'newsletter_text', 'newsletter_enabled',
             'phone', 'whatsapp', 'email', 'address',
+            'logo', 'hero_eyebrow', 'hero_title', 'hero_subtitle', 'hero_image',
         ];
 
         $values = [];
@@ -42,6 +44,7 @@ class SettingController extends Controller
             'user'      => Auth::user(),
             'active'    => 'settings',
             'values'    => $values,
+            'marqueeItems' => Settings::marqueeItems(),
             'hours'     => Settings::businessHours(),
             'days'      => [
                 'monday'    => 'Lunes',
@@ -90,6 +93,128 @@ class SettingController extends Controller
         Settings::set('newsletter_enabled', $newsEnabled);
 
         Session::flash('success', 'Contenido del sitio actualizado.');
+        return $this->redirect('/admin.php/settings');
+    }
+
+    /**
+     * Guarda (o quita) el logo del sitio.
+     */
+    public function updateLogo(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/settings');
+        }
+
+        $current = (string) Settings::get('logo', '');
+
+        if ($request->has('remove_logo')) {
+            if ($current !== '') {
+                Upload::delete($current);
+            }
+            Settings::set('logo', '');
+            Session::flash('success', 'Logo eliminado.');
+            return $this->redirect('/admin.php/settings');
+        }
+
+        $path = Upload::image('logo', 'logo', 'logo_', $current);
+        if ($path === null) {
+            Session::flash('error', Upload::error() ?? 'No se pudo subir el logo.');
+            return $this->redirect('/admin.php/settings');
+        }
+
+        if ($path !== $current) {
+            Settings::set('logo', $path);
+        }
+
+        Session::flash('success', 'Logo actualizado.');
+        return $this->redirect('/admin.php/settings');
+    }
+
+    /**
+     * Guarda el contenido de la portada (hero) y su imagen.
+     */
+    public function updateHero(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/settings');
+        }
+
+        $eyebrow  = trim((string) $request->input('hero_eyebrow', ''));
+        $title    = trim((string) $request->input('hero_title', ''));
+        $subtitle = trim((string) $request->input('hero_subtitle', ''));
+
+        if ($title === '') {
+            Session::flash('error', 'El título de la portada es obligatorio.');
+            return $this->redirect('/admin.php/settings');
+        }
+        if (mb_strlen($eyebrow) > 100 || mb_strlen($title) > 300 || mb_strlen($subtitle) > 500) {
+            Session::flash('error', 'Alguno de los textos de la portada supera el máximo permitido.');
+            return $this->redirect('/admin.php/settings');
+        }
+
+        $currentImage = (string) Settings::get('hero_image', '');
+        $newImage = $currentImage;
+
+        if ($request->has('remove_hero_image')) {
+            if ($currentImage !== '') {
+                Upload::delete($currentImage);
+            }
+            $newImage = '';
+        } else {
+            $path = Upload::image('hero_image', 'site', 'hero_', $currentImage);
+            if ($path === null) {
+                Session::flash('error', Upload::error() ?? 'No se pudo subir la imagen de portada.');
+                return $this->redirect('/admin.php/settings');
+            }
+            $newImage = $path;
+        }
+
+        Settings::set('hero_eyebrow', $eyebrow);
+        Settings::set('hero_title', $title);
+        Settings::set('hero_subtitle', $subtitle);
+        Settings::set('hero_image', $newImage);
+
+        Session::flash('success', 'Portada actualizada.');
+        return $this->redirect('/admin.php/settings');
+    }
+
+    /**
+     * Guarda los items de la cinta animada (marquee) del inicio.
+     */
+    public function updateMarquee(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/settings');
+        }
+
+        $raw = (string) $request->input('marquee_items', '');
+        $lines = preg_split('/\R/', $raw);
+        $items = [];
+        foreach ($lines as $line) {
+            $text = trim($line);
+            if ($text !== '') {
+                $items[] = $text;
+            }
+        }
+
+        if ($items === []) {
+            Session::flash('error', 'Agrega al menos un item a la cinta animada.');
+            return $this->redirect('/admin.php/settings');
+        }
+        if (count($items) > 12) {
+            Session::flash('error', 'La cinta animada admite máximo 12 items.');
+            return $this->redirect('/admin.php/settings');
+        }
+        foreach ($items as $item) {
+            if (mb_strlen($item) > 60) {
+                Session::flash('error', 'Cada item de la cinta no puede superar 60 caracteres.');
+                return $this->redirect('/admin.php/settings');
+            }
+        }
+
+        Settings::set('marquee_items', json_encode($items, JSON_UNESCAPED_UNICODE));
+
+        Session::flash('success', 'Cinta animada actualizada.');
         return $this->redirect('/admin.php/settings');
     }
 

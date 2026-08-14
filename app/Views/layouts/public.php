@@ -12,6 +12,7 @@ $activeNav = $active ?? '';
 
 $siteName        = (string) Settings::get('site_name', APP_NAME);
 $siteTagline     = (string) Settings::get('site_tagline', 'Estética masculina');
+$logo            = (string) Settings::get('logo', '');
 $siteDescription = (string) Settings::get('site_description', 'Calidad, precisión y estilo en cada corte. La barbería clásica con un toque moderno que marca la diferencia.');
 $contactPhone    = (string) Settings::get('phone', '+503 0000-0000');
 $contactEmail    = (string) Settings::get('email', 'contacto@barberiastyle.com');
@@ -101,9 +102,13 @@ foreach (['saturday', 'sunday'] as $d) {
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-18 py-3">
                 <a href="<?= APP_URL ?>/" class="flex items-center gap-3 group">
-                    <span class="w-11 h-11 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center transition group-hover:bg-gold/15">
-                        <i class="fa-solid fa-scissors text-gold"></i>
-                    </span>
+                    <?php if ($logo !== ''): ?>
+                        <img src="<?= UPLOAD_DIR . View::e($logo) ?>" alt="Logo — <?= View::e($siteName) ?>" class="w-11 h-11 rounded-full object-cover border border-gold/40">
+                    <?php else: ?>
+                        <span class="w-11 h-11 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center transition group-hover:bg-gold/15">
+                            <i class="fa-solid fa-scissors text-gold"></i>
+                        </span>
+                    <?php endif; ?>
                     <span class="leading-tight">
                         <span class="block font-display text-lg font-semibold tracking-wide text-goldlight"><?= View::e($siteName) ?></span>
                         <span class="block text-[10px] uppercase tracking-[.3em] text-cream/50"><?= View::e($siteTagline) ?></span>
@@ -151,9 +156,13 @@ foreach (['saturday', 'sunday'] as $d) {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             <div>
                 <a href="<?= APP_URL ?>/" class="flex items-center gap-3">
-                    <span class="w-11 h-11 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center">
-                        <i class="fa-solid fa-scissors text-gold"></i>
-                    </span>
+                    <?php if ($logo !== ''): ?>
+                        <img src="<?= UPLOAD_DIR . View::e($logo) ?>" alt="Logo — <?= View::e($siteName) ?>" class="w-11 h-11 rounded-full object-cover border border-gold/40">
+                    <?php else: ?>
+                        <span class="w-11 h-11 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center">
+                            <i class="fa-solid fa-scissors text-gold"></i>
+                        </span>
+                    <?php endif; ?>
                     <span>
                         <span class="block font-display text-lg font-semibold text-goldlight"><?= View::e($siteName) ?></span>
                         <span class="block text-[10px] uppercase tracking-[.3em] text-cream/50"><?= View::e($siteTagline) ?></span>

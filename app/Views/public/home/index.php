@@ -4,6 +4,14 @@
  * Contenido 100% extraído de la base de datos.
  */
 use App\Core\View;
+use App\Helpers\Settings;
+
+$heroEyebrow  = (string) Settings::get('hero_eyebrow', 'Cortes y estética masculina');
+$heroTitle    = (string) Settings::get('hero_title', 'Elegancia que<br>se lleva <em class="text-gold-grad italic">con actitud</em>');
+$heroSubtitle = (string) Settings::get('hero_subtitle', 'Cortes de precisión, barba esculpida y productos premium. Un equipo de barberos apasionados que transforma tu imagen en cada visita.');
+$heroImage    = (string) Settings::get('hero_image', '');
+$heroImageUrl = $heroImage !== '' ? UPLOAD_DIR . View::e($heroImage) : APP_URL . '/assets/img/cortehombre1.png';
+$marqueeItems = Settings::marqueeItems();
 ?>
 <!-- ============ HERO ============ -->
 <section class="hero-bg relative min-h-screen flex items-center pt-28 pb-20">
@@ -12,17 +20,15 @@ use App\Core\View;
             <div class="lg:col-span-7">
                 <span class="reveal inline-flex items-center gap-3 text-goldlight eyebrow">
                     <span class="h-px w-10 bg-gold/60"></span>
-                    Cortes y estética masculina
+                    <?= View::e($heroEyebrow) ?>
                 </span>
 
                 <h1 class="reveal mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05]" style="--delay:100ms">
-                    Elegancia que<br>
-                    se lleva <em class="text-gold-grad italic">con actitud</em>
+                    <?= $heroTitle ?>
                 </h1>
 
                 <p class="reveal mt-6 max-w-xl text-lg leading-relaxed text-cream/75" style="--delay:200ms">
-                    Cortes de precisión, barba esculpida y productos premium. Un equipo de
-                    barberos apasionados que transforma tu imagen en cada visita.
+                    <?= View::e($heroSubtitle) ?>
                 </p>
 
                 <div class="reveal mt-10 flex flex-wrap gap-4" style="--delay:300ms">
@@ -40,7 +46,7 @@ use App\Core\View;
                     <div class="absolute -inset-4 border border-gold/30 rounded-3xl rotate-3"></div>
                     <div class="absolute -inset-2 rounded-3xl border border-gold/20"></div>
                     <figure class="relative group overflow-hidden rounded-3xl border border-gold/40 shadow-2xl shadow-black/60">
-                        <img src="<?= APP_URL ?>/assets/img/cortehombre1.png" alt="Corte de autor — Barbería Style" class="w-full h-auto object-cover transition duration-700 group-hover:scale-105">
+                        <img src="<?= $heroImageUrl ?>" alt="Corte de autor — Barbería Style" class="w-full h-full aspect-square object-cover transition duration-700 group-hover:scale-105">
                         <div class="absolute inset-0 bg-gradient-to-t from-darkdeep/75 via-darkdeep/10 to-transparent"></div>
                         <figcaption class="absolute bottom-0 inset-x-0 p-6 flex items-end justify-between">
                             <div>
@@ -63,11 +69,10 @@ use App\Core\View;
     <div class="marquee-track text-goldlight eyebrow">
         <?php for ($i = 0; $i < 2; $i++): ?>
             <span class="flex items-center gap-14">
-                <span>Cortes de autor</span><i class="fa-solid fa-diamond text-[8px] text-gold/50"></i>
-                <span>Barba</span><i class="fa-solid fa-diamond text-[8px] text-gold/50"></i>
-                <span>Tinte</span><i class="fa-solid fa-diamond text-[8px] text-gold/50"></i>
-                <span>Acabados premium</span><i class="fa-solid fa-diamond text-[8px] text-gold/50"></i>
-                <span>Productos originales</span><i class="fa-solid fa-diamond text-[8px] text-gold/50"></i>
+                <?php foreach ($marqueeItems as $mi => $item): ?>
+                    <span><?= View::e($item) ?></span>
+                    <?php if ($mi < count($marqueeItems) - 1): ?><i class="fa-solid fa-diamond text-[8px] text-gold/50"></i><?php endif; ?>
+                <?php endforeach; ?>
             </span>
         <?php endfor; ?>
     </div>

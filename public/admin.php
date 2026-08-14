@@ -114,6 +114,9 @@ $router->post('/settings/contact', SettingController::class . '@updateContact', 
 $router->post('/settings/hours', SettingController::class . '@updateHours', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
 $router->post('/settings/social/store', SettingController::class . '@storeSocial', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
 $router->post('/settings/social/delete/{id}', SettingController::class . '@destroySocial', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/logo', SettingController::class . '@updateLogo', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/hero', SettingController::class . '@updateHero', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
+$router->post('/settings/marquee', SettingController::class . '@updateMarquee', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);
 
 $request = Request::createFromGlobals();
 $response = $router->dispatch($request);

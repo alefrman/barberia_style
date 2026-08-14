@@ -73,6 +73,34 @@ class Settings
     }
 
     /**
+     * Items de la cinta animada (marquee) del inicio.
+     */
+    public static function marqueeItems(): array
+    {
+        $default = ['Cortes de autor', 'Barba', 'Tinte', 'Acabados premium', 'Productos originales'];
+
+        $raw = self::get('marquee_items', '');
+        if ($raw === '') {
+            return $default;
+        }
+
+        $decoded = json_decode((string) $raw, true);
+        if (!is_array($decoded)) {
+            return $default;
+        }
+
+        $items = [];
+        foreach ($decoded as $item) {
+            $text = trim((string) $item);
+            if ($text !== '') {
+                $items[] = $text;
+            }
+        }
+
+        return $items !== [] ? $items : $default;
+    }
+
+    /**
      * Guarda (o crea) un setting e invalida la cache.
      */
     public static function set(string $key, string $value): void

@@ -5,12 +5,14 @@
  */
 use App\Core\View;
 use App\Helpers\Session;
+use App\Helpers\Settings;
 
 $pageTitle = $title ?? 'Panel de administración';
 $activeAdmin = $active ?? 'dashboard';
 $userName = ($user ?? null) ? View::e($user->getAttribute('name')) : 'Usuario';
 $userRole = ($user ?? null) ? View::e($user->roleName() ?? '') : '';
 $isSuperAdmin = strcasecmp((string) $userRole, 'Superadmin') === 0;
+$logo = (string) Settings::get('logo', '');
 $flashes = Session::getFlashes();
 ?>
 <!DOCTYPE html>
@@ -63,9 +65,13 @@ $flashes = Session::getFlashes();
     <!-- ============ SIDEBAR (desktop) ============ -->
     <aside class="admin-sidebar hidden lg:flex fixed inset-y-0 left-0 flex-col bg-darksoft border-r border-gold/10 z-40">
         <div class="admin-brand flex items-center gap-3 px-6 h-18 py-5 border-b border-white/5">
-            <span class="w-10 h-10 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center">
-                <i class="fa-solid fa-scissors text-gold"></i>
-            </span>
+            <?php if ($logo !== ''): ?>
+                <img src="<?= UPLOAD_DIR . View::e($logo) ?>" alt="Logo — Barbería Style" class="w-10 h-10 rounded-full object-cover border border-gold/40">
+            <?php else: ?>
+                <span class="w-10 h-10 rounded-full border border-gold/40 bg-gold/5 flex items-center justify-center">
+                    <i class="fa-solid fa-scissors text-gold"></i>
+                </span>
+            <?php endif; ?>
             <div class="admin-brand-text">
                 <p class="font-display text-base font-semibold text-goldlight leading-tight">Barbería Style</p>
                 <p class="text-[10px] uppercase tracking-[.25em] text-cream/50">Panel admin</p>
