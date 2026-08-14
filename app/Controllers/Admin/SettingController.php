@@ -188,10 +188,11 @@ class SettingController extends Controller
         }
 
         $raw = (string) $request->input('marquee_items', '');
-        $lines = preg_split('/\R/', $raw);
+        $raw = str_replace(["\r", "\n"], ',', $raw);
+        $parts = preg_split('/\s*,\s*/', $raw) ?? [];
         $items = [];
-        foreach ($lines as $line) {
-            $text = trim($line);
+        foreach ($parts as $part) {
+            $text = trim($part);
             if ($text !== '') {
                 $items[] = $text;
             }

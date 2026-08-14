@@ -182,7 +182,7 @@ use App\Models\SocialLink;
             <i class="fa-solid fa-film text-gold"></i>
             <div class="flex-1">
                 <h3 class="text-sm font-bold uppercase tracking-widest text-cream">Cinta animada</h3>
-                <p class="text-xs text-cream/40">Las palabras que se desplazan en la franja dorada del inicio. Una por línea (máx 12).</p>
+                <p class="text-xs text-cream/40">Las palabras que se desplazan en la franja dorada del inicio. Separa cada elemento con una coma (máx 12).</p>
             </div>
             <i class="settings-chevron fa-solid fa-chevron-down text-cream/40 transition-transform duration-200 group-hover:text-gold"></i>
         </button>
@@ -190,8 +190,7 @@ use App\Models\SocialLink;
         <div class="settings-body pt-5 space-y-5">
             <div>
                 <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="marquee_items">Items</label>
-                <textarea id="marquee_items" name="marquee_items" rows="6" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 placeholder:text-cream/30 font-mono"><?php foreach ($marqueeItems as $item): ?><?= View::e($item) ?>
-<?php endforeach; ?></textarea>
+                <textarea id="marquee_items" name="marquee_items" rows="3" placeholder="Barba, Corte, Tinte, Skincare" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 placeholder:text-cream/30 font-mono"><?= View::e(implode(', ', $marqueeItems)) ?></textarea>
             </div>
 
             <div class="flex justify-end">
