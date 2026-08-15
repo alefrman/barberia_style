@@ -270,6 +270,42 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Cambia el estado de una cita desde el listado (AJAX/form).
+     */
+    public function updateStatus(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $request->wantsJson()
+                ? $this->json(['ok' => false, 'message' => 'Token de seguridad inválido.'], 400)
+                : $this->redirect('/admin.php/appointments');
+        }
+
+        $id = (int) ($params['id'] ?? 0);
+        $statusId = (int) $request->input('status_id', 0);
+
+        if (Appointment::find($id) === null) {
+            return $request->wantsJson()
+                ? $this->json(['ok' => false, 'message' => 'Cita no encontrada.'], 404)
+                : $this->redirect('/admin.php/appointments');
+        }
+
+        if (AppointmentStatus::find($statusId) === null) {
+            return $request->wantsJson()
+                ? $this->json(['ok' => false, 'message' => 'Selecciona un estado válido.'], 422)
+                : $this->redirect('/admin.php/appointments');
+        }
+
+        Appointment::updateWhere(['id' => $id], ['status_id' => $statusId]);
+
+        if ($request->wantsJson()) {
+            return $this->json(['ok' => true, 'message' => 'Estado actualizado correctamente.']);
+        }
+
+        Session::flash('success', 'Estado de la cita actualizado correctamente.');
+        return $this->redirect('/admin.php/appointments');
+    }
+
+    /**
      * Elimina una cita (restaura stock).
      */
     public function destroy(Request $request, array $params): Response

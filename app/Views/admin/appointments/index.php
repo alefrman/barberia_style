@@ -112,7 +112,13 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                     </td>
                     <td class="px-6 py-4 text-cream/70"><?= View::e($r['type_name']) ?></td>
                     <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-medium border <?= $statusBadge($r['status_name']) ?>"><?= View::e($r['status_name']) ?></span>
+                        <select data-status-select data-csrf="<?= View::e(Session::csrfToken()) ?>"
+                                data-url="<?= ADMIN_URL ?>/appointments/status/<?= (int) $r['id'] ?>"
+                                class="px-3 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none appearance-none text-center <?= $statusBadge($r['status_name']) ?>">
+                            <?php foreach ($statuses as $s): ?>
+                                <option value="<?= (int) $s->getAttribute('id') ?>" <?= (int) $r['status_id'] === (int) $s->getAttribute('id') ? 'selected' : '' ?>><?= View::e($s->getAttribute('name')) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </td>
                     <td class="px-6 py-4 text-cream/70"><?= (int) $r['services_count'] ?> serv.</td>
                     <td class="px-6 py-4 text-cream/70"><?= (int) $r['products_count'] ?> prod.</td>
@@ -149,3 +155,59 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+    (function () {
+        const classesByStatus = {
+            'pendiente': 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+            'confirmada': 'bg-sky-500/10 text-sky-300 border-sky-500/30',
+            'completada': 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+            'cancelada': 'bg-red-500/10 text-red-300 border-red-500/30',
+            'no asistió': 'bg-slate-500/10 text-slate-300 border-slate-500/30',
+        };
+        const baseClass = 'bg-white/10 text-cream/70 border-white/20';
+
+        document.querySelectorAll('[data-status-select]').forEach((select) => {
+            select.dataset.previous = select.value;
+
+            select.addEventListener('change', async () => {
+                const previous = select.dataset.previous;
+                select.disabled = true;
+
+                const applyColors = () => {
+                    const label = (select.selectedOptions[0]?.textContent || '').toLowerCase();
+                    select.className = 'px-3 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none appearance-none text-center ' +
+                        (classesByStatus[label] || baseClass);
+                };
+
+                try {
+                    const res = await fetch(select.dataset.url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({
+                            _csrf: select.dataset.csrf,
+                            status_id: select.value,
+                        }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || !data.ok) {
+                        throw new Error(data.message || 'No se pudo actualizar el estado.');
+                    }
+                    select.dataset.previous = select.value;
+                    applyColors();
+                    setTimeout(() => window.location.reload(), 350);
+                } catch (err) {
+                    alert(err.message || 'No se pudo actualizar el estado.');
+                    select.value = previous;
+                    applyColors();
+                } finally {
+                    select.disabled = false;
+                }
+            });
+        });
+    })();
+</script>
