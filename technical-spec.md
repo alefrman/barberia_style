@@ -13,6 +13,7 @@ Arquitectura, stack, estructura de código y base de datos del sistema.
 | Acceso a datos | **PDO** con sentencias preparadas obligatorias, `ATTR_EMULATE_PREPARES => false` |
 | Framework | **Framework MVC propio** (sin dependencias externas de runtime) |
 | Frontend | Tailwind CSS (CDN), Font Awesome 6.5.2, CSS propio, JavaScript vanilla |
+| Gráficas | **Chart.js vía CDN** (jsdelivr), solo en el dashboard |
 | Lightbox | GLightbox vía CDN (jsdelivr) |
 | Autoload | Composer (PSR-4: `App\` → `app/`) |
 | Testing | PHPUnit instalado como dev-dependency; verificación manual mediante scripts CLI |
@@ -179,6 +180,12 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 - Settings: teléfono, email, dirección, latitud/longitud, horario JSON, `tax_rate`, `currency`.
 - **Moneda y localización coherentes**: `currency = USD`, teléfono `+503 0000-0000`, dirección en San Salvador y `TIMEZONE = America/El_Salvador` (config.php). El seed de `schema.sql` y la BD en vivo ya coinciden.
 
+### 6.4 Consultas financieras del dashboard
+- **Ingreso = solo citas "Completada"**: el dashboard une `appointments` con `appointment_statuses` y filtra `LOWER(s.name) = 'completada'`.
+- Series de 12 meses: `GROUP BY DATE_FORMAT(..., '%Y-%m')` sobre ingresos (citas completadas) y gastos, rellenando meses vacíos con `0` en PHP.
+- Gastos del mes: `GROUP BY` categoría (`LEFT JOIN expense_categories`, alias "Sin categoría") y método de pago.
+- Estados de cita: `GROUP BY status name` para `completada` / `no asistió` / `cancelada`, filtrado por rango de fechas según `?period=week` (lunes a domingo) o el mes calendario.
+
 ---
 
 ## 7. Request / Response
@@ -222,6 +229,7 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 - **Tailwind CDN** con `tailwind.config` (colores y tipografía personalizados) en ambos layouts.
 - **Font Awesome 6.5.2** CDN.
+- **Chart.js CDN** (solo cargado dentro de la vista `admin/dashboard/index.php`): barras (ingresos vs gastos, estados de cita), líneas (ganancia neta) y donas (gastos por categoría/método). Tema oscuro con la paleta del proyecto; los datos se pasan al JS con `json_encode`.
 - **GLightbox** (CSS + JS) solo en el layout público; inicializado desde `assets/js/gallery.js` con `loop`, `zoomable`, `touchNavigation`, `draggable`.
 - **JavaScript vanilla**:
   - Navbar con sombra al hacer scroll.

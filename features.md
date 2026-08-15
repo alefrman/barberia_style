@@ -58,6 +58,13 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 
 ### 3.2 Dashboard
 - Tarjetas de resumen: **citas de hoy**, **total de servicios**, **total de productos**, **total de gastos**.
+- **KPIs financieros del mes**: ingresos, gastos, ganancia neta (ingresos − gastos) y ticket promedio.
+- **Gráficas con Chart.js (CDN)**:
+  - Barras: ingresos vs gastos de los últimos 12 meses.
+  - Línea: ganancia neta mensual.
+  - Donas: gastos del mes por categoría y por método de pago.
+  - Barras: estados de cita (**Completada / No asistió / Cancelada**) con **filtro por mes o semana actual** (`?period=month|week`).
+- **Regla financiera**: el ingreso solo considera citas con estado **"Completada"**.
 - Bienvenida con nombre y rol del usuario autenticado.
 
 ### 3.3 Citas (turnos)
@@ -126,7 +133,6 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 
 - Reserva de citas **desde el sitio público** (el CTA "Agendar ahora" aún es `#`).
 - Facturación/impresión de recibo.
-- Reportes y gráficas financieras (ingresos vs. gastos).
 - Multi-sucursal / agenda por barbero con validación de choque de horarios.
 - Notificaciones (email/SMS).
 - Galería del admin con múltiples imágenes por corte.

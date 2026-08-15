@@ -96,6 +96,13 @@ Paleta definida en `tailwind.config` (layouts público y admin) y referencias CS
 - **Acciones por fila**: iconos de editar (lápiz) y eliminar (papelera) con `confirm` de JavaScript.
 - **Upload de imagen** con preview en vivo (FileReader → `#preview-img`).
 
+### Gráficas del dashboard (Chart.js)
+- Tema **oscuro** alineado a la paleta: fondos `#1F2937` (tooltips), ejes `rgba(255,255,255,0.08)`, ticks y leyenda en `rgba(254,249,195,0.6)` (cream).
+- Semántica de color: **verde** = ingresos/ganancia, **rojo** = gastos/salidas, **dorado** = KPI principal (ganancia neta).
+- Donas: paleta rotativa (`gold`, `goldlight`, rojo, azul, verde, morado, rosa, gris) con `cutout: 62%`.
+- Tarjetas KPI financieros con borde de color en hover según su naturaleza (verde/rojo/dorado/azul).
+- Toggle **Mes/Semana** en la gráfica de estados: botón activo dorado (`bg-gold text-darkdeep`), inactivo oscuro con borde.
+
 ### Flujo de eliminar
 - Confirmación nativa del navegador.
 - Si hay dependencia (FK), mensaje flash amigable: *"No se puede eliminar: el producto está asociado a una o más citas."*

@@ -31,8 +31,30 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 ## 2. Dashboard
 
-- Muestra tarjetas: **Citas de hoy**, **Servicios** (total), **Productos** (total), **Gastos** (total).
+- Tarjetas: **Citas de hoy**, **Servicios** (total), **Productos** (total), **Gastos** (total).
 - Bienvenida con nombre y rol del usuario.
+
+### 2.1 KPIs financieros (mes en curso)
+
+| KPI | Definición |
+|---|---|
+| Ingresos del mes | Suma de `appointments.total` de citas con estado **"Completada"** en el mes actual. |
+| Gastos del mes | Suma de `expenses.amount` del mes actual. |
+| Ganancia neta | Ingresos del mes − gastos del mes (se pinta en rojo si es negativa). |
+| Ticket promedio | Ingresos del mes ÷ número de citas completadas del mes. |
+
+### 2.2 Gráficas (Chart.js por CDN)
+
+1. **Barras — Ingresos vs Gastos**: últimos 12 meses, series mensuales (meses sin datos se completan con 0).
+2. **Línea — Ganancia neta mensual**: ingresos − gastos por mes (misma ventana de 12 meses).
+3. **Dona — Gastos por categoría**: total por `expense_categories` del mes actual ("Sin categoría" para gastos sin categoría).
+4. **Dona — Gastos por método de pago**: total por `payment_method` del mes actual.
+5. **Barras — Estados de cita**: conteo de **Completada / No asistió / Cancelada** con **filtro**:
+   - `?period=month` (default): mes calendario actual.
+   - `?period=week`: semana actual (lunes a domingo).
+   - El valor inválido cae a `month`.
+
+> **Regla financiera**: solo las citas **"Completada"** generan ingreso. Cancelada y No asistió no suman.
 
 ---
 
@@ -237,7 +259,6 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 1. Reserva en línea desde el sitio público.
 2. Validación de choque de horarios por barbero.
-3. Reportes financieros (ingresos vs. gastos, ganancia por producto/servicio).
-4. Impresión de recibos.
-5. Notificaciones por email/SMS.
-6. Edición de `settings` (horarios, impuesto, contacto) desde el panel.
+3. Impresión de recibos.
+4. Notificaciones por email/SMS.
+5. Edición de `settings` (horarios, impuesto, contacto) desde el panel.
