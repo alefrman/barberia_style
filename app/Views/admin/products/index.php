@@ -19,7 +19,7 @@ $f = $filters;
 </div>
 
 <!-- Resumen -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
     <div class="bg-darksoft rounded-2xl border border-white/5 p-5">
         <div class="flex items-center gap-3">
             <div class="w-11 h-11 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-goldlight"><i class="fa-solid fa-box-open"></i></div>
@@ -53,6 +53,15 @@ $f = $filters;
             <div>
                 <p class="text-[11px] uppercase tracking-widest text-cream/50">Agotados</p>
                 <p class="font-display text-2xl font-semibold text-red-400"><?= (int) $summary['out'] ?></p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-darksoft rounded-2xl border border-gold/30 p-5">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-goldlight"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <p class="text-[11px] uppercase tracking-widest text-cream/50">Ganancia pendiente</p>
+                <p class="font-display text-2xl font-semibold text-goldlight"><?= Money::format((float) $summary['profit']) ?></p>
             </div>
         </div>
     </div>
@@ -90,6 +99,7 @@ $f = $filters;
                     <th class="px-6 py-4">Categoría</th>
                     <th class="px-6 py-4">Precio</th>
                     <th class="px-6 py-4">Costo</th>
+                    <th class="px-6 py-4">Ganancia pendiente</th>
                     <th class="px-6 py-4">Stock</th>
                     <th class="px-6 py-4">Estado</th>
                     <th class="px-6 py-4 text-right">Acciones</th>
@@ -126,6 +136,10 @@ $f = $filters;
                     <td class="px-6 py-4 font-semibold text-goldlight"><?= Money::format((float) $r['price']) ?></td>
                     <td class="px-6 py-4 text-cream/70"><?= Money::format((float) $r['cost']) ?></td>
                     <td class="px-6 py-4">
+                        <?php $profit = ((float) $r['price'] - (float) $r['cost']) * $stock; ?>
+                        <span class="<?= $profit < 0 ? 'text-red-400' : 'text-emerald-400' ?> font-semibold"><?= Money::format($profit) ?></span>
+                    </td>
+                    <td class="px-6 py-4">
                         <span class="<?= $stock <= 0 ? 'text-red-400' : ($stock <= $min ? 'text-amber-300' : 'text-emerald-400') ?> font-semibold">
                             <?= $stock ?> <span class="font-normal text-cream/40 text-xs">/ min <?= $min ?></span>
                         </span>
@@ -145,6 +159,9 @@ $f = $filters;
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2">
+                            <a href="<?= ADMIN_URL ?>/inventory/<?= (int) $r['id'] ?>/movements" title="Historial de stock" class="w-9 h-9 rounded-lg bg-dark border border-white/10 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/40 transition">
+                                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                            </a>
                             <a href="<?= ADMIN_URL ?>/inventory/edit/<?= (int) $r['id'] ?>" title="Editar" class="w-9 h-9 rounded-lg bg-dark border border-white/10 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/40 transition">
                                 <i class="fa-solid fa-pen text-xs"></i>
                             </a>

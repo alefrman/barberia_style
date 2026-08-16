@@ -53,6 +53,7 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
    - `?period=month` (default): mes calendario actual.
    - `?period=week`: semana actual (lunes a domingo).
    - El valor inválido cae a `month`.
+6. **Barras horizontales — Top productos más vendidos**: top 10 por unidades vendidas en citas **Completadas** (todo el histórico), con el valor al final de cada barra y badge con el **total de unidades vendidas**. El **tooltip** muestra el **monto de ventas** en `$` (`SUM(precio × cantidad)` por producto).
 
 > **Regla financiera**: solo las citas **"Completada"** generan ingreso. Cancelada y No asistió no suman.
 
@@ -151,9 +152,16 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 ### 5.2 Filtros y resumen
 - Filtros: búsqueda (`q` en nombre/descripción), categoría, estado de stock (**bajo** = `stock <= min_stock`, **agotado** = `stock <= 0`).
-- Tarjetas de resumen: total de productos, unidades en stock, con stock bajo, agotados.
+- Tarjetas de resumen: total de productos, unidades en stock, con stock bajo, agotados y **ganancia pendiente** total (`Σ (precio − costo) × stock`).
 
-### 5.3 Reglas de negocio
+### 5.3 Historial de movimientos
+- Cada producto tiene un historial (`/inventory/{id}/movements`) con los movimientos de stock en orden cronológico inverso.
+- **Se registra automáticamente** al crear el producto (tipo `creation`) y al editar el stock desde el formulario (tipo `edit`, solo si cambia).
+- **Reponer stock**: botón en la página del historial (POST `/inventory/{id}/restock`) que suma unidades (cantidad ≥ 1, nota opcional) y registra un movimiento tipo `restock`.
+- Cada movimiento guarda: tipo, cantidad (con signo), stock antes → después, nota, usuario que lo registró (`created_by`) y fecha.
+- **Ganancia pendiente** por producto = `(precio − costo) × stock`; si no hay costo se toma como $0.
+
+### 5.4 Reglas de negocio
 - El stock se modifica **automáticamente** al crear/editar/eliminar citas (ver módulo Citas).
 - Si el producto está en alguna cita, la eliminación se bloquea (FK RESTRICT) con mensaje amigable.
 - Los productos **activos** ordenados por `sort_order` se muestran en `/` (preview 4) y `/products`.

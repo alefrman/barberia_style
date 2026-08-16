@@ -64,6 +64,7 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
   - Línea: ganancia neta mensual.
   - Donas: gastos del mes por categoría y por método de pago.
   - Barras: estados de cita (**Completada / No asistió / Cancelada**) con **filtro por mes o semana actual** (`?period=month|week`).
+  - Barras horizontales: **top 10 productos más vendidos** (unidades, citas completadas), con **total de unidades** y valor al final de cada barra.
 - **Regla financiera**: el ingreso solo considera citas con estado **"Completada"**.
 - Bienvenida con nombre y rol del usuario autenticado.
 
@@ -92,7 +93,9 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 - **Categorías** con creación inline.
 - Campos: categoría, nombre, descripción, precio (USD), costo (USD), **stock**, **stock mínimo**, imagen, orden, activo/inactivo.
 - **Filtros**: búsqueda, categoría, estado de stock (bajo / agotado).
-- **Tarjetas de resumen**: total de productos, unidades en stock, stock bajo, agotados.
+- **Tarjetas de resumen**: total de productos, unidades en stock, stock bajo, agotados y **ganancia pendiente** total.
+- **Ganancia pendiente por producto**: columna `(precio − costo) × stock` (costo vacío = $0; si el margen es negativo se muestra en rojo).
+- **Historial de movimientos de stock**: botón reloj por producto → página con formulario **Reponer stock** (cantidad + nota opcional) y tabla de movimientos (creación, reposición, ajuste al editar) con fecha, cantidad, stock antes → después, nota y usuario que registró.
 - La eliminación se bloquea si el producto está en una cita.
 
 ### 3.6 Barberos (equipo)

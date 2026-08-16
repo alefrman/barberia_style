@@ -32,13 +32,13 @@ $flashes = Session::getFlashes();
             theme: {
                 extend: {
                     colors: {
-                        gold: '#F59E0B',
-                        goldlight: '#FBBF24',
-                        golddark: '#B45309',
-                        cream: '#FEF9C3',
-                        dark: '#2D3748',
-                        darksoft: '#1F2937',
-                        darkdeep: '#111827',
+                        gold: '#D4AF37',
+                        goldlight: '#E6C65C',
+                        golddark: '#B18E2E',
+                        cream: '#EDEDE9',
+                        dark: '#17181B',
+                        darksoft: '#202227',
+                        darkdeep: '#0E0F12',
                     },
                     fontFamily: {
                         display: ['"Playfair Display"', 'Georgia', 'serif'],

@@ -123,6 +123,21 @@ CREATE TABLE products (
     FOREIGN KEY (category_id) REFERENCES product_categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Historial de movimientos de inventario (reposiciones y cambios de stock)
+CREATE TABLE inventory_movements (
+    id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    product_id   INT UNSIGNED NOT NULL,
+    type         VARCHAR(20)   NOT NULL DEFAULT 'edit',  -- creation | restock | edit
+    quantity     INT           NOT NULL DEFAULT 0,       -- con signo (+ entrada, - salida)
+    stock_before INT           NOT NULL DEFAULT 0,
+    stock_after  INT           NOT NULL DEFAULT 0,
+    note         VARCHAR(255),
+    created_by   INT UNSIGNED,
+    created_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)    ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Equipo (barberos)
 CREATE TABLE team (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

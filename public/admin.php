@@ -92,6 +92,8 @@ $router->get('/inventory/edit/{id}', ProductController::class . '@edit', [AuthMi
 $router->post('/inventory/update/{id}', ProductController::class . '@update', [AuthMiddleware::class]);
 $router->post('/inventory/toggle/{id}', ProductController::class . '@toggle', [AuthMiddleware::class]);
 $router->post('/inventory/delete/{id}', ProductController::class . '@destroy', [AuthMiddleware::class]);
+$router->get('/inventory/{id}/movements', ProductController::class . '@movements', [AuthMiddleware::class]);
+$router->post('/inventory/{id}/restock', ProductController::class . '@restock', [AuthMiddleware::class]);
 
 // ============ MÓDULO GASTOS ============
 $router->get('/expenses', ExpenseController::class . '@index', [AuthMiddleware::class]);

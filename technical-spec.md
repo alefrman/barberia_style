@@ -125,7 +125,7 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 > **Nota**: `save()` es solo UPDATE. Para insertar usar siempre `create()`.
 
-### 5.3 Modelos (16)
+### 5.3 Modelos (17)
 
 | Modelo | Tabla |
 |---|---|
@@ -138,6 +138,7 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 | `AppointmentProduct` | `appointment_products` |
 | `Service` / `ServiceCategory` | `services` / `service_categories` |
 | `Product` / `ProductCategory` | `products` / `product_categories` |
+| `InventoryMovement` | `inventory_movements` |
 | `Team` | `team` |
 | `Gallery` | `gallery` |
 | `Expense` / `ExpenseCategory` | `expenses` / `expense_categories` |
@@ -147,14 +148,15 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 ## 6. Base de datos
 
-### 6.1 Tablas (16)
+### 6.1 Tablas (17)
 
 **Catálogos (6)**: `roles`, `appointment_types`, `appointment_statuses`, `service_categories`, `product_categories`, `expense_categories`.
 
-**Principales (10)**:
+**Principales (11)**:
 - `users` — cuenta de acceso al panel (`role_id` FK → roles RESTRICT).
 - `services` — catálogo de cortes (categoría FK SET NULL, precio, duración, imagen, activo, orden).
 - `products` — inventario (categoría FK SET NULL, precio/costo, stock/min_stock, imagen).
+- `inventory_movements` — historial de stock (`product_id` FK CASCADE, `type` creation|restock|edit, cantidad con signo, stock antes/después, nota, `created_by` FK SET NULL).
 - `team` — barberos.
 - `gallery` — fotos del portafolio.
 - `appointments` — cabecera de cita (tipo, estado, cliente, fecha/hora, subtotal/total, `created_by`).

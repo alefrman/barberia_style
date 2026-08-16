@@ -226,7 +226,7 @@ $marqueeItems = Settings::marqueeItems();
                     <a href="https://wa.me/<?= View::e(preg_replace('/\D+/', '', (string) App\Helpers\Settings::get('whatsapp', ''))) ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-darkdeep text-goldlight font-bold uppercase text-xs tracking-[.2em] hover:bg-dark transition shadow-xl btn-shine">
                         <i class="fa-brands fa-whatsapp"></i> Agendar ahora
                     </a>
-                    <a href="tel:<?= View::e(App\Helpers\Settings::get('phone', '')) ?>" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg border-2 border-darkdeep text-darkdeep font-bold uppercase text-xs tracking-[.2em] hover:bg-darkdeep hover:text-goldlight transition">
+                    <a href="tel:<?= View::e(App\Helpers\Settings::get('phone', '+503 0000-0000')) ?>" class="inline-flex items-center gap-3 px-8 py-4 rounded-lg border-2 border-darkdeep text-darkdeep font-bold uppercase text-xs tracking-[.2em] hover:bg-darkdeep hover:text-goldlight transition">
                         <i class="fa-solid fa-phone"></i> <?= View::e(App\Helpers\Settings::get('phone', '+503 0000-0000')) ?>
                     </a>
                 </div>

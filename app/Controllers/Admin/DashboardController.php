@@ -78,6 +78,16 @@ class DashboardController extends Controller
         // Conteo por estado de cita (Completada / No asistió / Cancelada) con filtro mes o semana
         [$statusRange, $statusLabels, $statusCounts] = $this->statusCounts($period);
 
+        // Productos: más vendidos y ganancia pendiente
+        $topProducts = $this->topProducts();
+        $topProductsTotal = (int) (Database::fetchValue(
+            "SELECT COALESCE(SUM(ap.quantity), 0)
+             FROM appointment_products ap
+             INNER JOIN appointments a          ON a.id = ap.appointment_id
+             INNER JOIN appointment_statuses s  ON s.id = a.status_id
+             WHERE LOWER(s.name) = 'completada'"
+        ) ?? 0);
+
         return $this->view('admin/dashboard/index', [
             'title'            => 'Dashboard',
             'user'             => $user,
@@ -100,6 +110,8 @@ class DashboardController extends Controller
             'statusRange'      => $statusRange,
             'statusLabels'     => $statusLabels,
             'statusCounts'     => $statusCounts,
+            'topProducts'      => $topProducts,
+            'topProductsTotal' => $topProductsTotal,
         ], 'admin');
     }
 
@@ -209,5 +221,27 @@ class DashboardController extends Controller
         }
 
         return [$range, $names, $counts];
+    }
+
+    /**
+     * Top 10 productos más vendidos en unidades y en dinero (solo citas completadas).
+     *
+     * @return array<int, array{name: string, units: int, money: float}>
+     */
+    private function topProducts(): array
+    {
+        return Database::fetchAll(
+            "SELECT p.name AS name,
+                    COALESCE(SUM(ap.quantity), 0)       AS units,
+                    COALESCE(SUM(ap.price * ap.quantity), 0) AS money
+             FROM appointment_products ap
+             INNER JOIN appointments a          ON a.id = ap.appointment_id
+             INNER JOIN appointment_statuses s  ON s.id = a.status_id
+             INNER JOIN products p              ON p.id = ap.product_id
+             WHERE LOWER(s.name) = 'completada'
+             GROUP BY p.id, p.name
+             ORDER BY units DESC
+             LIMIT 10"
+        );
     }
 }

@@ -94,7 +94,8 @@ Paleta definida en `tailwind.config` (layouts público y admin) y referencias CS
 - **Formularios**: inputs oscuros (`bg-dark/60`), borde sutil, focus dorado con anillo (`focus:border-gold/60 focus:ring-2 focus:ring-gold/20`), placeholder claro.
 - **Validación en vivo de agenda (citas)**: al cambiar fecha/hora/barbero/servicio se consulta la disponibilidad por AJAX (debounce 400 ms); los barberos con choque se marcan con borde y mensaje **rojo** (`border-red-500` + texto `text-red-400`) bajo su select, con botón **"Usar HH:MM"** que aplica la hora sugerida, y un **banner superior rojo** resume los conflictos con "(disponible a partir de las HH:MM)"; el botón de guardar queda bloqueado hasta resolverlos.
 - **Botón principal**: dorado (`bg-gold text-darkdeep`) con efecto `btn-shine`; botones secundarios con borde.
-- **Acciones por fila**: iconos de editar (lápiz) y eliminar (papelera) con `confirm` de JavaScript.
+- **Acciones por fila**: iconos de editar (lápiz) y eliminar (papelera) con `confirm` de JavaScript. En inventario, además un botón **reloj** abre el historial de stock del producto.
+- **Historial de inventario**: página con tarjetas del producto (stock actual, ganancia pendiente, precio, costo), formulario **Reponer stock** (cantidad + nota) y tabla de movimientos con píldoras por tipo (creación dorado, reposición verde, ajuste azul) y cantidades en verde/rojo según entrada/salida.
 - **Upload de imagen** con preview en vivo (FileReader → `#preview-img`).
 
 ### Gráficas del dashboard (Chart.js)
@@ -103,6 +104,7 @@ Paleta definida en `tailwind.config` (layouts público y admin) y referencias CS
 - Donas: paleta rotativa (`gold`, `goldlight`, rojo, azul, verde, morado, rosa, gris) con `cutout: 62%`.
 - Tarjetas KPI financieros con borde de color en hover según su naturaleza (verde/rojo/dorado/azul).
 - Toggle **Mes/Semana** en la gráfica de estados: botón activo dorado (`bg-gold text-darkdeep`), inactivo oscuro con borde.
+- **Top productos más vendidos**: **barras horizontales** (`indexAxis: 'y'`) para que los nombres de producto se vean **completos** (`autoSkip: false` + `afterFit` con ancho mínimo del eje). Plugin inline `endLabels` dibuja el **valor al final de cada barra** (unidades doradas), y la tarjeta muestra un **badge con el total de unidades vendidas**.
 
 ### Flujo de eliminar
 - Confirmación nativa del navegador.

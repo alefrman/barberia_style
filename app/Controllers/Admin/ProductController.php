@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Helpers\Auth;
 use App\Helpers\Session;
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductCategory;
 
@@ -60,6 +61,7 @@ class ProductController extends Controller
         $units = (int) (Database::fetch("SELECT COALESCE(SUM(stock), 0) AS c FROM products")['c'] ?? 0);
         $lowStock = (int) (Database::fetch("SELECT COUNT(*) AS c FROM products WHERE stock <= min_stock")['c'] ?? 0);
         $outStock = (int) (Database::fetch("SELECT COUNT(*) AS c FROM products WHERE stock <= 0")['c'] ?? 0);
+        $profitTotal = (float) (Database::fetch("SELECT COALESCE(SUM((price - cost) * stock), 0) AS c FROM products")['c'] ?? 0);
 
         return $this->view('admin/products/index', [
             'title'     => 'Inventario',
@@ -73,6 +75,7 @@ class ProductController extends Controller
                 'units'    => $units,
                 'low'      => $lowStock,
                 'out'      => $outStock,
+                'profit'   => $profitTotal,
             ],
         ], 'admin');
     }
@@ -108,7 +111,7 @@ class ProductController extends Controller
             return $this->redirect('/admin.php/inventory/create');
         }
 
-        Product::create([
+        $product = Product::create([
             'category_id' => $data['category_id'],
             'name'        => $data['name'],
             'description' => $data['description'],
@@ -120,6 +123,8 @@ class ProductController extends Controller
             'is_active'   => $data['is_active'],
             'sort_order'  => $data['sort_order'],
         ]);
+
+        $this->logMovement((int) $product->getAttribute('id'), 'creation', (int) $data['stock'], 0, (int) $data['stock'], null);
 
         Session::flash('success', 'Producto creado correctamente.');
         return $this->redirect('/admin.php/inventory');
@@ -179,6 +184,8 @@ class ProductController extends Controller
             $this->deleteImageFile($oldImage);
         }
 
+        $oldStock = (int) $product->getAttribute('stock');
+
         Product::updateWhere(['id' => $id], [
             'category_id' => $data['category_id'],
             'name'        => $data['name'],
@@ -191,6 +198,10 @@ class ProductController extends Controller
             'is_active'   => $data['is_active'],
             'sort_order'  => $data['sort_order'],
         ]);
+
+        if ((int) $data['stock'] !== $oldStock) {
+            $this->logMovement($id, 'edit', (int) $data['stock'] - $oldStock, $oldStock, (int) $data['stock'], 'Edición del producto');
+        }
 
         Session::flash('success', 'Producto actualizado correctamente.');
         return $this->redirect('/admin.php/inventory');
@@ -218,6 +229,83 @@ class ProductController extends Controller
 
         Session::flash('success', $active ? 'Producto activado.' : 'Producto desactivado.');
         return $this->redirect('/admin.php/inventory');
+    }
+
+    /**
+     * Historial de movimientos de stock de un producto.
+     */
+    public function movements(Request $request, array $params): Response
+    {
+        $id = (int) ($params['id'] ?? 0);
+        $product = Product::find($id);
+
+        if ($product === null) {
+            Session::flash('error', 'Producto no encontrado.');
+            return $this->redirect('/admin.php/inventory');
+        }
+
+        $rows = Database::fetchAll(
+            "SELECT m.*, u.name AS user_name
+             FROM inventory_movements m
+             LEFT JOIN users u ON u.id = m.created_by
+             WHERE m.product_id = :pid
+             ORDER BY m.created_at DESC, m.id DESC",
+            ['pid' => $id]
+        );
+
+        $stock = (int) $product->getAttribute('stock');
+        $price = (float) $product->getAttribute('price');
+        $cost = (float) $product->getAttribute('cost');
+
+        return $this->view('admin/products/movements', [
+            'title'   => 'Historial de inventario',
+            'user'    => Auth::user(),
+            'active'  => 'inventory',
+            'product' => $product,
+            'rows'    => $rows,
+            'stock'   => $stock,
+            'profit'  => ($price - $cost) * $stock,
+        ], 'admin');
+    }
+
+    /**
+     * Repone stock de un producto (registra el movimiento).
+     */
+    public function restock(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->redirect('/admin.php/inventory');
+        }
+
+        $id = (int) ($params['id'] ?? 0);
+        $product = Product::find($id);
+
+        if ($product === null) {
+            Session::flash('error', 'Producto no encontrado.');
+            return $this->redirect('/admin.php/inventory');
+        }
+
+        $qty = (int) $request->input('quantity', 0);
+        $note = trim((string) $request->input('note', ''));
+
+        if ($qty < 1) {
+            Session::flash('error', 'La cantidad a reponer debe ser al menos 1 unidad.');
+            return $this->redirect('/admin.php/inventory/' . $id . '/movements');
+        }
+
+        if ($qty > 99999) {
+            Session::flash('error', 'La cantidad es demasiado grande (máx 99999).');
+            return $this->redirect('/admin.php/inventory/' . $id . '/movements');
+        }
+
+        $before = (int) $product->getAttribute('stock');
+        $after = $before + $qty;
+
+        Product::updateWhere(['id' => $id], ['stock' => $after]);
+        $this->logMovement($id, 'restock', $qty, $before, $after, $note !== '' ? $note : null);
+
+        Session::flash('success', 'Stock repuesto: +' . $qty . ' unidad(es) de "' . (string) $product->getAttribute('name') . '".');
+        return $this->redirect('/admin.php/inventory/' . $id . '/movements');
     }
 
     /**
@@ -257,6 +345,22 @@ class ProductController extends Controller
     /* ============================================================
      * HELPERS
      * ========================================================== */
+
+    /**
+     * Registra un movimiento de stock en el historial del producto.
+     */
+    private function logMovement(int $productId, string $type, int $quantity, int $before, int $after, ?string $note): void
+    {
+        InventoryMovement::create([
+            'product_id'   => $productId,
+            'type'         => $type,
+            'quantity'     => $quantity,
+            'stock_before' => $before,
+            'stock_after'  => $after,
+            'note'         => $note,
+            'created_by'   => Auth::id(),
+        ]);
+    }
 
     private function formView(?Product $product, string $title): Response
     {

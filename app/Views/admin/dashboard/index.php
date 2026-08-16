@@ -134,6 +134,22 @@ $monthTicket = (float) ($monthTicket ?? 0);
             <canvas id="chart-status"></canvas>
         </div>
     </div>
+
+    <div class="lg:col-span-2 bg-darksoft rounded-2xl border border-white/5 p-6">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h3 class="font-display text-lg font-semibold text-white">Top productos más vendidos</h3>
+                <p class="text-xs text-cream/50 mt-1">Unidades vendidas por producto en citas completadas.</p>
+            </div>
+            <div class="shrink-0 rounded-xl bg-gold/10 border border-gold/30 px-4 py-2 text-center">
+                <p class="font-display text-xl font-semibold text-goldlight"><?= number_format((int) $topProductsTotal) ?></p>
+                <p class="text-[10px] uppercase tracking-widest text-cream/50">unidades totales</p>
+            </div>
+        </div>
+        <div class="h-72 mt-4">
+            <canvas id="chart-top-products"></canvas>
+        </div>
+    </div>
 </div>
 
 <div class="mt-8 bg-darksoft rounded-2xl border border-white/5 p-8">
@@ -287,6 +303,65 @@ $monthTicket = (float) ($monthTicket ?? 0);
                 plugins: { legend: { display: false }, tooltip: { ...baseTooltip, callbacks: { label: (c) => c.dataset.label + ': ' + c.parsed.y } } },
                 scales: { x: axisStyle, y: { ...axisStyle, beginAtZero: true, ticks: { ...axisStyle.ticks, stepSize: 1 } } },
             },
+        });
+
+        // Plugin inline: muestra el valor al final de cada barra horizontal
+        const endLabels = {
+            id: 'endLabels',
+            defaults: { color: 'rgba(254, 249, 195, 0.85)', font: 'bold 11px Inter', format: (v) => v },
+            afterDatasetsDraw(chart, _args, opts) {
+                const { ctx } = chart;
+                chart.data.datasets.forEach((ds, di) => {
+                    const meta = chart.getDatasetMeta(di);
+                    meta.data.forEach((bar, i) => {
+                        const value = Number(ds.data[i]);
+                        if (value === 0) return;
+                        ctx.save();
+                        ctx.fillStyle = opts.color;
+                        ctx.font = opts.font;
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(opts.format(value), bar.x + 8, bar.y);
+                        ctx.restore();
+                    });
+                });
+            },
+        };
+
+        // 6. Barras horizontales: Top productos más vendidos
+        const topProducts = <?= json_encode($topProducts) ?>;
+        new Chart(document.getElementById('chart-top-products'), {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(r => r.name),
+                datasets: [{
+                    label: 'Unidades',
+                    data: topProducts.map(r => Number(r.units)),
+                    backgroundColor: 'rgba(251, 191, 36, 0.85)',
+                    borderRadius: 6,
+                    maxBarThickness: 18,
+                }],
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { left: 8, right: 28 } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { ...baseTooltip, callbacks: { label: (c) => 'Ventas: $' + Number(topProducts[c.dataIndex].money).toFixed(2) } },
+                    endLabels: { color: '#FBBF24' },
+                },
+                scales: {
+                    x: { ...axisStyle, beginAtZero: true, ticks: { ...axisStyle.ticks, stepSize: 1 } },
+                    y: {
+                        ...axisStyle,
+                        ticks: { ...axisStyle.ticks, autoSkip: false },
+                        afterFit: (axis) => { axis.width = Math.max(axis.width, 150); },
+                    },
+                },
+            },
+            plugins: [endLabels],
         });
     })();
 </script>
