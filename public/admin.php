@@ -63,6 +63,7 @@ $router->get('/appointments/show/{id}', AppointmentController::class . '@show', 
 $router->get('/appointments/edit/{id}', AppointmentController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/appointments/update/{id}', AppointmentController::class . '@update', [AuthMiddleware::class]);
 $router->post('/appointments/status/{id}', AppointmentController::class . '@updateStatus', [AuthMiddleware::class]);
+$router->post('/appointments/availability', AppointmentController::class . '@availability', [AuthMiddleware::class]);
 $router->post('/appointments/delete/{id}', AppointmentController::class . '@destroy', [AuthMiddleware::class]);
 
 // ============ MÓDULO SERVICIOS ============

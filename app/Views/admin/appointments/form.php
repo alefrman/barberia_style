@@ -20,6 +20,41 @@ foreach (Settings::businessHours() as $dayKey => $range) {
         'close' => (string) ($range['close'] ?? ''),
     ];
 }
+
+// Franjas de hora (cada 15 min) según el horario del día seleccionado.
+$timeOptions = '';
+$timeDate = (string) ($values['appointment_date'] ?? date('Y-m-d'));
+$timeSelected = substr((string) ($values['appointment_time'] ?? ''), 0, 5);
+$tDayKey = ['sun' => 'sunday', 'mon' => 'monday', 'tue' => 'tuesday', 'wed' => 'wednesday', 'thu' => 'thursday', 'fri' => 'friday', 'sat' => 'saturday'][strtolower(date('D', strtotime($timeDate)))] ?? '';
+$tRange = $tDayKey !== '' ? (Settings::businessHours()[$tDayKey] ?? ['open' => '', 'close' => '']) : ['open' => '', 'close' => ''];
+$tOpen = (string) ($tRange['open'] ?? '');
+$tClose = (string) ($tRange['close'] ?? '');
+if ($tOpen !== '' && $tClose !== '' && preg_match('/^\d{2}:\d{2}$/', $tOpen) && preg_match('/^\d{2}:\d{2}$/', $tClose)) {
+    [$tOh, $tOm] = array_map('intval', explode(':', $tOpen));
+    [$tCh, $tCm] = array_map('intval', explode(':', $tClose));
+    $tStart = $tOh * 60 + $tOm;
+    $tEnd = $tCh * 60 + $tCm;
+    $tIsToday = $timeDate === date('Y-m-d');
+    $tMin = -1;
+    if ($tIsToday) {
+        $tNowPlus1 = strtotime('+1 hour');
+        if (date('Y-m-d', $tNowPlus1) === date('Y-m-d')) {
+            [$tNh, $tNm] = array_map('intval', explode(':', date('H:i', $tNowPlus1)));
+            $tMin = $tNh * 60 + $tNm;
+        } else {
+            $tMin = PHP_INT_MAX;
+        }
+    }
+    for ($t = $tStart; $t < $tEnd; $t += 15) {
+        if ($tIsToday && $t < $tMin) {
+            continue;
+        }
+        $hh = str_pad((string) intdiv($t, 60), 2, '0', STR_PAD_LEFT);
+        $mm = str_pad((string) ($t % 60), 2, '0', STR_PAD_LEFT);
+        $opt = $hh . ':' . $mm;
+        $timeOptions .= '<option value="' . $opt . '"' . ($opt === $timeSelected ? ' selected' : '') . '>' . $opt . '</option>';
+    }
+}
 ?>
 <div class="max-w-5xl">
     <div class="flex items-center gap-4 mb-8">
@@ -34,6 +69,11 @@ foreach (Settings::businessHours() as $dayKey => $range) {
 
     <form method="POST" action="<?= $submitUrl ?>" class="space-y-6" id="appointment-form" novalidate data-inline-validation="off">
         <input type="hidden" name="_csrf" value="<?= View::e(Session::csrfToken()) ?>">
+
+        <div id="availability-banner" class="hidden bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-xl px-4 py-3">
+            <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+            <span id="availability-banner-text"></span>
+        </div>
 
         <!-- ======== Datos del cliente y cita ======== -->
         <div class="bg-darksoft rounded-2xl border border-white/5 p-8">
@@ -57,7 +97,9 @@ foreach (Settings::businessHours() as $dayKey => $range) {
                 </div>
                 <div>
                     <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="appointment_time">Hora *</label>
-                    <input type="time" id="appointment_time" name="appointment_time" required step="60" min="<?= ($values['appointment_date'] ?? '') === date('Y-m-d') ? date('H:i', strtotime('+1 hour')) : '' ?>" value="<?= View::e($values['appointment_time'] ?? '') ?>" class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20">
+                    <select id="appointment_time" name="appointment_time" required <?= $timeOptions === '' ? 'disabled' : '' ?> class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 cursor-pointer">
+                        <?= $timeOptions !== '' ? $timeOptions : '<option value="">Sin horarios disponibles — elige otra fecha</option>' ?>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="type_id">Tipo *</label>
@@ -105,8 +147,8 @@ foreach (Settings::businessHours() as $dayKey => $range) {
                         <select name="service_id[]" required class="service-select w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none focus:border-gold/60 cursor-pointer">
                             <option value="">Selecciona un servicio</option>
                             <?php foreach ($services as $srv): ?>
-                                <option value="<?= (int) $srv->getAttribute('id') ?>" data-price="<?= (float) $srv->getAttribute('price') ?>" <?= (int) $sv['service_id'] === (int) $srv->getAttribute('id') ? 'selected' : '' ?>>
-                                    <?= View::e($srv->getAttribute('name')) ?> — <?= Money::format((float) $srv->getAttribute('price')) ?>
+                                <option value="<?= (int) $srv->getAttribute('id') ?>" data-price="<?= (float) $srv->getAttribute('price') ?>" data-duration="<?= (int) $srv->getAttribute('duration') ?>" <?= (int) $sv['service_id'] === (int) $srv->getAttribute('id') ? 'selected' : '' ?>>
+                                    <?= View::e($srv->getAttribute('name')) ?> — <?= Money::format((float) $srv->getAttribute('price')) ?> · <?= (int) $srv->getAttribute('duration') ?> min
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -196,7 +238,7 @@ const fmt = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, max
 const servicesOptions = `<?php
     $opts = '<option value="">Selecciona un servicio</option>';
     foreach ($services as $srv) {
-        $opts .= '<option value="' . (int) $srv->getAttribute('id') . '" data-price="' . (float) $srv->getAttribute('price') . '">' . htmlspecialchars((string) $srv->getAttribute('name')) . ' — ' . App\Helpers\Money::format((float) $srv->getAttribute('price')) . '</option>';
+        $opts .= '<option value="' . (int) $srv->getAttribute('id') . '" data-price="' . (float) $srv->getAttribute('price') . '" data-duration="' . (int) $srv->getAttribute('duration') . '">' . htmlspecialchars((string) $srv->getAttribute('name')) . ' — ' . App\Helpers\Money::format((float) $srv->getAttribute('price')) . ' · ' . (int) $srv->getAttribute('duration') . ' min</option>';
     }
     echo $opts;
 ?>`;
@@ -300,9 +342,12 @@ document.addEventListener('change', e => {
 const dateInput = document.getElementById('appointment_date');
 const timeInput = document.getElementById('appointment_time');
 
-function todayStr() {
-    const d = new Date();
+function dateStr(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function todayStr() {
+    return dateStr(new Date());
 }
 
 function minTimeStr() {
@@ -326,28 +371,42 @@ function isClosedDay(dateStr) {
     return r.open === '' || r.close === '';
 }
 
-function updateTimeConstraints() {
+function rebuildTimeOptions() {
     if (!dateInput || !timeInput) return;
-    if (dateInput.value === '') {
-        timeInput.min = '';
-        timeInput.max = '';
-        timeInput.disabled = false;
-        return;
-    }
-    const r = rangeFor(dateInput.value);
-    if (r.open === '' || r.close === '') {
-        timeInput.min = '';
-        timeInput.max = '';
+    const date = dateInput.value;
+    if (date === '') {
+        timeInput.innerHTML = '<option value="">Sin horarios disponibles — elige una fecha</option>';
         timeInput.disabled = true;
         return;
     }
-    timeInput.disabled = false;
-    let min = r.open;
-    if (dateInput.value === todayStr() && minTimeStr() > min) {
-        min = minTimeStr();
+    const r = rangeFor(date);
+    if (r.open === '' || r.close === '') {
+        timeInput.innerHTML = '<option value="">Día cerrado — elige otra fecha</option>';
+        timeInput.disabled = true;
+        return;
     }
-    timeInput.min = min;
-    timeInput.max = r.close;
+    const prev = timeInput.value;
+    const openMin = Number(r.open.slice(0, 2)) * 60 + Number(r.open.slice(3, 5));
+    const closeMin = Number(r.close.slice(0, 2)) * 60 + Number(r.close.slice(3, 5));
+    const isToday = date === todayStr();
+    const nowPlus1 = new Date(Date.now() + 60 * 60 * 1000);
+    const nowPlus1Min = nowPlus1.getHours() * 60 + nowPlus1.getMinutes();
+    const allPastToday = isToday && dateStr(nowPlus1) !== todayStr();
+    let opts = '';
+    for (let cur = openMin; cur < closeMin; cur += 15) {
+        if (allPastToday || (isToday && cur < nowPlus1Min)) continue;
+        const hh = String(Math.floor(cur / 60)).padStart(2, '0');
+        const mm = String(cur % 60).padStart(2, '0');
+        const t = hh + ':' + mm;
+        opts += '<option value="' + t + '"' + (t === prev ? ' selected' : '') + '>' + t + '</option>';
+    }
+    timeInput.innerHTML = opts !== ''
+        ? opts
+        : '<option value="">Sin horarios disponibles para este día — elige otra fecha</option>';
+    timeInput.disabled = opts === '';
+    if (opts !== '' && timeInput.value === '') {
+        timeInput.value = timeInput.querySelector('option').value;
+    }
 }
 
 function syncTypeWithDate() {
@@ -363,15 +422,124 @@ function syncTypeWithDate() {
 }
 
 if (dateInput) {
-    dateInput.addEventListener('change', updateTimeConstraints);
+    dateInput.addEventListener('change', rebuildTimeOptions);
     dateInput.addEventListener('change', syncTypeWithDate);
 }
-document.addEventListener('DOMContentLoaded', updateTimeConstraints);
+document.addEventListener('DOMContentLoaded', rebuildTimeOptions);
 document.addEventListener('DOMContentLoaded', syncTypeWithDate);
 
 document.addEventListener('DOMContentLoaded', updateTotals);
 
 const appointmentForm = document.getElementById('appointment-form');
+
+/* ======== Verificación de disponibilidad en vivo (AJAX) ======== */
+const availabilityUrl = ADMIN_URL + '/appointments/availability';
+const csrfToken = appointmentForm.querySelector('input[name="_csrf"]').value;
+const excludeId = <?= $isEditing ? (int) $editing->getAttribute('id') : 0 ?>;
+let availabilityTimer = null;
+let conflictActive = false;
+
+const availabilityBanner = document.getElementById('availability-banner');
+const availabilityBannerText = document.getElementById('availability-banner-text');
+
+function collectAvailabilityServices() {
+    const rows = [];
+    document.querySelectorAll('.service-row').forEach(row => {
+        const serviceSel = row.querySelector('.service-select');
+        const barberSel = row.querySelector('[name="barber_id[]"]');
+        const serviceId = Number(serviceSel.value);
+        const barberId = Number(barberSel.value);
+        if (serviceId > 0 && barberId > 0) {
+            rows.push({ service_id: serviceId, barber_id: barberId });
+        }
+    });
+    return rows;
+}
+
+function clearAvailabilityMarks() {
+    document.querySelectorAll('[name="barber_id[]"]').forEach(sel => {
+        sel.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+        const msg = sel.nextElementSibling;
+        if (msg && msg.classList.contains('availability-msg')) msg.remove();
+    });
+}
+
+function renderAvailability(conflicts) {
+    clearAvailabilityMarks();
+    if (!conflicts.length) {
+        conflictActive = false;
+        availabilityBanner.classList.add('hidden');
+        return;
+    }
+    conflictActive = true;
+    const texts = [];
+    conflicts.forEach(c => {
+        texts.push(c.barber + ' a las ' + c.time + (c.next_available ? ' (disponible a partir de las ' + c.next_available + ')' : ''));
+        document.querySelectorAll('.service-row').forEach(row => {
+            const barberSel = row.querySelector('[name="barber_id[]"]');
+            if (barberSel && Number(barberSel.value) === c.barber_id) {
+                barberSel.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+                if (!barberSel.nextElementSibling || !barberSel.nextElementSibling.classList.contains('availability-msg')) {
+                    const p = document.createElement('p');
+                    p.className = 'availability-msg mt-2 text-xs text-red-400';
+                    let text = c.barber + ' ya está ocupado a las ' + c.time + ' (cita #' + c.appointment_id + '). Cambia la hora o el barbero';
+                    text += c.next_available ? ', o agenda a partir de las ' + c.next_available + '.' : '.';
+                    p.appendChild(document.createTextNode(text));
+                    if (c.next_available) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'ml-1 px-2 py-1 rounded-lg border border-gold/40 text-goldlight text-[11px] font-bold hover:bg-gold/10 transition';
+                        btn.textContent = 'Usar ' + c.next_available;
+                        btn.addEventListener('click', () => {
+                            timeInput.value = c.next_available;
+                            checkAvailability();
+                        });
+                        p.appendChild(btn);
+                    }
+                    barberSel.insertAdjacentElement('afterend', p);
+                }
+            }
+        });
+    });
+    availabilityBannerText.textContent = 'Hay choques de horario: ' + texts.join('. ') + '. Cambia la hora o el barbero para continuar.';
+    availabilityBanner.classList.remove('hidden');
+}
+
+function checkAvailability() {
+    const services = collectAvailabilityServices();
+    const date = dateInput.value;
+    const time = timeInput.value;
+    if (date === '' || time === '' || services.length === 0) {
+        clearAvailabilityMarks();
+        availabilityBanner.classList.add('hidden');
+        conflictActive = false;
+        return;
+    }
+    fetch(availabilityUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _csrf: csrfToken, date, time, services, exclude_id: excludeId }),
+    })
+    .then(r => r.json())
+    .then(data => renderAvailability(data.conflicts || []))
+    .catch(() => { /* el servidor valida al guardar */ });
+}
+
+function scheduleAvailabilityCheck() {
+    clearTimeout(availabilityTimer);
+    availabilityTimer = setTimeout(checkAvailability, 400);
+}
+
+if (dateInput) dateInput.addEventListener('change', scheduleAvailabilityCheck);
+if (timeInput) timeInput.addEventListener('change', scheduleAvailabilityCheck);
+document.addEventListener('change', e => {
+    if (e.target.classList.contains('service-select') || e.target.matches('[name="barber_id[]"]')) scheduleAvailabilityCheck();
+});
+
+const servicesContainer = document.getElementById('services-container');
+if (servicesContainer) {
+    new MutationObserver(scheduleAvailabilityCheck).observe(servicesContainer, { childList: true });
+}
 
 function clearFieldErrors() {
     document.querySelectorAll('.field-error').forEach(el => el.remove());
@@ -380,6 +548,14 @@ function clearFieldErrors() {
 
 appointmentForm.addEventListener('submit', function (e) {
     clearFieldErrors();
+
+    if (conflictActive) {
+        e.preventDefault();
+        scheduleAvailabilityCheck();
+        availabilityBanner.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+    }
+
     let hasErrors = false;
     let firstError = null;
 

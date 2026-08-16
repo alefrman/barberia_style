@@ -75,6 +75,9 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 - **Detalle de cita**: uno o más servicios (con barbero asignado) y/o productos (con cantidad).
 - **Totales calculados desde BD**: subtotal = suma de precios de servicios + (precio × cantidad) de productos.
 - **Control de stock automático**: al agregar/editar/eliminar productos en una cita se descuenta/restaura el inventario.
+- **Validación de choque de horarios por barbero**: no se permite agendar a un barbero cuando la hora solicitada se solapa con sus citas **Pendientes/Confirmadas**; la ocupación depende de la **duración** de los servicios (suma por barbero). El mensaje sugiere la **próxima hora libre** del barbero (*"… o agenda a partir de las HH:MM"*).
+- **Verificación de disponibilidad en vivo (AJAX)**: al elegir fecha/hora/barbero/servicio se consulta `POST /appointments/availability`; los barberos ocupados se marcan en rojo con mensaje y **botón "Usar HH:MM"** que selecciona la hora sugerida, aparece un aviso con "(disponible a partir de las HH:MM)" y se bloquea el envío hasta resolver el conflicto.
+- **Formulario persistente**: si la validación del servidor falla (p. ej. choque de horarios), se re-renderiza el formulario con los datos capturados para poder cambiar de barbero/hora sin perder nada.
 - Guardado con **transacciones SQL** (todo o nada).
 
 ### 3.4 Servicios
@@ -133,6 +136,6 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 
 - Reserva de citas **desde el sitio público** (el CTA "Agendar ahora" aún es `#`).
 - Facturación/impresión de recibo.
-- Multi-sucursal / agenda por barbero con validación de choque de horarios.
+- Multi-sucursal.
 - Notificaciones (email/SMS).
 - Galería del admin con múltiples imágenes por corte.

@@ -119,8 +119,9 @@ class AppointmentController extends Controller
 
         if ($errors !== []) {
             Session::flash('error', $errors[0]);
-            return $this->redirect('/admin.php/appointments/create');
-        }        Database::beginTransaction();
+            return $this->formView(null, 'Nueva cita', $this->preservedData($data));
+        }
+        Database::beginTransaction();
         try {
             $appointment = Appointment::create([
                 'type_id'    => $data['type_id'],
@@ -231,7 +232,7 @@ class AppointmentController extends Controller
 
         if ($errors !== []) {
             Session::flash('error', $errors[0]);
-            return $this->redirect('/admin.php/appointments/edit/' . $id);
+            return $this->formView($appointment, 'Editar cita', $this->preservedData($data));
         }
 
         Database::beginTransaction();
@@ -306,6 +307,44 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Verifica en vivo si hay choque de horarios por barbero (AJAX).
+     */
+    public function availability(Request $request, array $params): Response
+    {
+        if (!$this->validCsrf($request)) {
+            return $this->json(['ok' => false, 'message' => 'Token de seguridad inválido.'], 400);
+        }
+
+        $date = trim((string) $request->input('date', ''));
+        $time = trim((string) $request->input('time', ''));
+        $excludeId = (int) $request->input('exclude_id', 0);
+
+        $services = [];
+        foreach ((array) $request->input('services', []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $serviceId = (int) ($row['service_id'] ?? $row['id'] ?? 0);
+            $barberId = (int) ($row['barber_id'] ?? 0);
+            if ($serviceId > 0 && $barberId > 0) {
+                $services[] = ['id' => $serviceId, 'barber_id' => $barberId];
+            }
+        }
+
+        if ($date === '' || $time === '') {
+            return $this->json(['ok' => true, 'conflicts' => []]);
+        }
+
+        $conflicts = $this->barberConflicts($date, $time, $services, $excludeId > 0 ? $excludeId : null);
+
+        return $this->json(
+            $conflicts === []
+                ? ['ok' => true, 'conflicts' => []]
+                : ['ok' => false, 'conflicts' => $conflicts]
+        );
+    }
+
+    /**
      * Elimina una cita (restaura stock).
      */
     public function destroy(Request $request, array $params): Response
@@ -343,8 +382,9 @@ class AppointmentController extends Controller
 
     /**
      * Renderiza el formulario de cita (crear/editar).
+     * $preserved: datos ya capturados del POST para no perderlos al fallar la validación.
      */
-    private function formView(?Appointment $appointment, string $title): Response
+    private function formView(?Appointment $appointment, string $title, ?array $preserved = null): Response
     {
         $servicesList = Service::all('sort_order', 'ASC');
         $productsList = Product::all('sort_order', 'ASC');
@@ -370,6 +410,12 @@ class AppointmentController extends Controller
             }
         }
 
+        if ($preserved !== null) {
+            $values = array_merge($values, $preserved['values'] ?? []);
+            $selectedServices = $preserved['services'] ?? $selectedServices;
+            $selectedProducts = $preserved['products'] ?? $selectedProducts;
+        }
+
         return $this->view('admin/appointments/form', [
             'title'      => $title,
             'user'       => Auth::user(),
@@ -385,6 +431,212 @@ class AppointmentController extends Controller
             'selectedServices' => $selectedServices,
             'selectedProducts' => $selectedProducts,
         ], 'admin');
+    }
+
+    /**
+     * Convierte "HH:MM" a minutos desde medianoche.
+     */
+    private function timeToMinutes(string $time): int
+    {
+        $parts = array_map('intval', explode(':', $time));
+        return $parts[0] * 60 + ($parts[1] ?? 0);
+    }
+
+    /**
+     * Detecta choques de agenda por barbero según la duración de los servicios.
+     * Retorna lista de conflictos con: barber_id, barber, date, time, appointment_id, minutes, busy_minutes.
+     */
+    private function barberConflicts(string $date, string $time, array $serviceRows, ?int $excludeId = null): array
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !preg_match('/^\d{2}:\d{2}/', $time)) {
+            return [];
+        }
+
+        // Duración total por barbero en la nueva cita
+        $byBarber = [];
+        foreach ($serviceRows as $row) {
+            $barberId = (int) ($row['barber_id'] ?? 0);
+            if ($barberId <= 0) {
+                continue;
+            }
+            $service = Service::find((int) ($row['id'] ?? 0));
+            $duration = $service !== null ? max(1, (int) $service->getAttribute('duration')) : 30;
+            $byBarber[$barberId] = ($byBarber[$barberId] ?? 0) + $duration;
+        }
+
+        $conflicts = [];
+        $newStart = $this->timeToMinutes($time);
+
+        foreach ($byBarber as $barberId => $newMinutes) {
+            $barber = Team::find($barberId);
+            $barberName = $barber?->getAttribute('name') ?? 'Barbero #' . $barberId;
+            $newEnd = $newStart + $newMinutes;
+
+            $rows = Database::fetchAll(
+                "SELECT a.id, a.appointment_time,
+                        COALESCE(SUM(sv.duration), 0) AS busy_min
+                 FROM appointments a
+                 INNER JOIN appointment_statuses st ON st.id = a.status_id
+                 INNER JOIN appointment_services asv ON asv.appointment_id = a.id
+                 INNER JOIN services sv ON sv.id = asv.service_id
+                 WHERE a.appointment_date = :date
+                   AND asv.barber_id = :barber
+                   AND LOWER(st.name) IN ('pendiente', 'confirmada')
+                   AND a.id <> :exclude
+                 GROUP BY a.id, a.appointment_time",
+                ['date' => $date, 'barber' => $barberId, 'exclude' => $excludeId ?? 0]
+            );
+
+            $barberConflicts = [];
+            foreach ($rows as $row) {
+                $busyStart = $this->timeToMinutes((string) $row['appointment_time']);
+                $busyEnd = $busyStart + (int) $row['busy_min'];
+                if ($newStart < $busyEnd && $busyStart < $newEnd) {
+                    $barberConflicts[] = [
+                        'barber_id'     => $barberId,
+                        'barber'        => $barberName,
+                        'date'          => $date,
+                        'time'          => substr((string) $row['appointment_time'], 0, 5),
+                        'appointment_id' => (int) $row['id'],
+                        'minutes'       => $newMinutes,
+                        'busy_minutes'  => (int) $row['busy_min'],
+                    ];
+                }
+            }
+
+            if ($barberConflicts !== []) {
+                $next = $this->nextAvailableSlot($date, $barberId, $newMinutes, $rows);
+                foreach ($barberConflicts as &$conflict) {
+                    $conflict['next_available'] = $next;
+                }
+                unset($conflict);
+                $conflicts = array_merge($conflicts, $barberConflicts);
+            }
+        }
+
+        return $conflicts;
+    }
+
+    /**
+     * Primera franja libre de 15 min para un barbero en una fecha,
+     * considerando el horario de atención, las citas ocupadas y (si es hoy)
+     * la regla de al menos 1 hora después de la hora actual.
+     * Retorna "HH:MM" o null si no hay hueco disponible.
+     */
+    private function nextAvailableSlot(string $date, int $barberId, int $newMinutes, array $busyRows): ?string
+    {
+        $dayKey = ['mon' => 'monday', 'tue' => 'tuesday', 'wed' => 'wednesday', 'thu' => 'thursday', 'fri' => 'friday', 'sat' => 'saturday', 'sun' => 'sunday'][strtolower(date('D', strtotime($date)))] ?? '';
+        if ($dayKey === '') {
+            return null;
+        }
+
+        $range = Settings::businessHours()[$dayKey] ?? ['open' => '', 'close' => ''];
+        $open = (string) ($range['open'] ?? '');
+        $close = (string) ($range['close'] ?? '');
+        if ($open === '' || $close === '' || !preg_match('/^\d{2}:\d{2}$/', $open) || !preg_match('/^\d{2}:\d{2}$/', $close)) {
+            return null;
+        }
+
+        $openMin = $this->timeToMinutes($open);
+        $closeMin = $this->timeToMinutes($close);
+
+        $minStart = -1;
+        if ($date === date('Y-m-d')) {
+            $nowPlus1 = strtotime('+1 hour');
+            if (date('Y-m-d', $nowPlus1) !== $date) {
+                return null; // hoy ya no hay hora que cumpla "al menos 1 hora después"
+            }
+            $minStart = $this->timeToMinutes(date('H:i', $nowPlus1));
+        }
+
+        $busy = [];
+        foreach ($busyRows as $row) {
+            $start = $this->timeToMinutes((string) $row['appointment_time']);
+            $busy[] = [$start, $start + (int) $row['busy_min']];
+        }
+
+        for ($candidate = $openMin; $candidate + $newMinutes <= $closeMin; $candidate += 15) {
+            if ($candidate < $minStart) {
+                continue;
+            }
+            $candidateEnd = $candidate + $newMinutes;
+            $overlap = false;
+            foreach ($busy as [$busyStart, $busyEnd]) {
+                if ($candidate < $busyEnd && $busyStart < $candidateEnd) {
+                    $overlap = true;
+                    break;
+                }
+            }
+            if (!$overlap) {
+                return str_pad((string) intdiv($candidate, 60), 2, '0', STR_PAD_LEFT)
+                    . ':' . str_pad((string) ($candidate % 60), 2, '0', STR_PAD_LEFT);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Agrega a $errors los choques de agenda detectados (validación del servidor).
+     * Un error por barbero, listando las citas que chocan y sugiriendo la próxima hora libre.
+     */
+    private function validateBarberConflicts(array $data, ?int $appointmentId, array &$errors): void
+    {
+        if ($data['appointment_date'] === '' || $data['appointment_time'] === '') {
+            return;
+        }
+
+        $byBarber = [];
+        foreach ($this->barberConflicts($data['appointment_date'], $data['appointment_time'], $data['services'], $appointmentId) as $conflict) {
+            $byBarber[$conflict['barber']]['spots'][] = 'a las ' . $conflict['time'] . ' (cita #' . $conflict['appointment_id'] . ')';
+            $byBarber[$conflict['barber']]['next_available'] = $conflict['next_available'] ?? null;
+        }
+
+        foreach ($byBarber as $barberName => $info) {
+            $message = 'El barbero ' . $barberName
+                . ' ya está ocupado el ' . date('d/m/Y', strtotime($data['appointment_date']))
+                . ' ' . implode(', ', $info['spots']) . '.'
+                . ' Cambia la hora o el barbero';
+
+            $next = (string) ($info['next_available'] ?? '');
+            $message .= $next !== ''
+                ? ', o agenda a partir de las ' . $next . '.'
+                : '.';
+
+            $errors[] = $message;
+        }
+    }
+
+    /**
+     * Construye los datos preservados del POST para re-renderizar el formulario.
+     */
+    private function preservedData(array $data): array
+    {
+        $services = [];
+        foreach ($data['services'] as $row) {
+            $service = Service::find((int) $row['id']);
+            $services[] = [
+                'service_id' => (int) $row['id'],
+                'barber_id'  => (int) $row['barber_id'],
+                'price'      => $service !== null ? (float) $service->getAttribute('price') : 0,
+            ];
+        }
+
+        $products = [];
+        foreach ($data['products'] as $row) {
+            $product = Product::find((int) $row['id']);
+            $products[] = [
+                'product_id' => (int) $row['id'],
+                'quantity'   => (int) $row['quantity'],
+                'price'      => $product !== null ? (float) $product->getAttribute('price') : 0,
+            ];
+        }
+
+        return [
+            'values'   => $data,
+            'services' => $services,
+            'products' => $products,
+        ];
     }
 
     /**
@@ -517,6 +769,8 @@ class AppointmentController extends Controller
                 $errors[] = 'Solo hay ' . $available . ' unidades disponibles de "' . $name . '".';
             }
         }
+
+        $this->validateBarberConflicts($data, $appointmentId, $errors);
 
         return $errors;
     }

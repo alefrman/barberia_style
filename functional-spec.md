@@ -93,6 +93,15 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 **Transaccionalidad**
 - Toda la operación (cabecera + detalles + stock + totales) se ejecuta en una transacción; si algo falla, se revierte todo.
 
+**Reglas de agenda (choque de horarios por barbero)**
+- La ocupación de un barbero en una cita = **suma de la duración** (`services.duration`) de los servicios que se le asignan (inicia en `appointment_time`).
+- Solo bloquean las citas con estado **Pendiente** o **Confirmada**; Completada, Cancelada y No asistió no ocupan agenda.
+- Servicios sin barbero no bloquean a nadie.
+- Al guardar (crear/editar), el servidor detecta solapamientos: cita nueva en `[inicio, inicio + Σ duraciones)` vs citas existentes del mismo día y barbero. Si choca, se muestra el error *"El barbero X ya está ocupado el … (cita #N)"* y **el formulario se re-renderiza conservando los datos capturados** para poder cambiar de barbero/hora.
+- El mensaje sugiere la **próxima hora libre** del barbero (franja de 15 min que quepa completa, dentro del horario de atención y tras `ahora+1h` si es hoy): *"… Cambia la hora o el barbero, o agenda a partir de las HH:MM."* Si el barbero está lleno ese día, omite la sugerencia.
+- Al **editar**, la cita actual queda excluida del chequeo (`exclude_id`).
+- **Verificación en vivo (AJAX)**: el formulario consulta `POST /appointments/availability` (JSON + CSRF) al cambiar fecha/hora/barbero/servicio (debounce 400 ms); marca en rojo los barberos ocupados con su mensaje y un **botón "Usar HH:MM"** que selecciona la hora sugerida y re-verifica, muestra un banner de resumen con "(disponible a partir de las HH:MM)" y **bloquea el envío** mientras haya conflictos. El servidor es la validación definitiva.
+
 ### 3.3 Detalle (`/show/{id}`)
 - Muestra cabecera (con nombres de tipo/estado), lista de servicios (con barbero) y productos (con cantidades), total y usuario creador.
 
@@ -258,7 +267,6 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 ## 13. Requisitos futuros (fuera de alcance actual)
 
 1. Reserva en línea desde el sitio público.
-2. Validación de choque de horarios por barbero.
-3. Impresión de recibos.
-4. Notificaciones por email/SMS.
-5. Edición de `settings` (horarios, impuesto, contacto) desde el panel.
+2. Impresión de recibos.
+3. Notificaciones por email/SMS.
+4. Edición de `settings` (horarios, impuesto, contacto) desde el panel.

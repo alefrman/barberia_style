@@ -186,6 +186,28 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 - Gastos del mes: `GROUP BY` categoría (`LEFT JOIN expense_categories`, alias "Sin categoría") y método de pago.
 - Estados de cita: `GROUP BY status name` para `completada` / `no asistió` / `cancelada`, filtrado por rango de fechas según `?period=week` (lunes a domingo) o el mes calendario.
 
+### 6.5 Validación de agenda (choque de horarios por barbero)
+- `AppointmentController::barberConflicts($date, $time, $services, $excludeId)` suma la duración de los servicios por barbero de la cita nueva y consulta las citas existentes del mismo día/barbero:
+
+```sql
+SELECT a.id, a.appointment_time, COALESCE(SUM(sv.duration), 0) AS busy_min
+FROM appointments a
+INNER JOIN appointment_statuses st ON st.id = a.status_id
+INNER JOIN appointment_services asv ON asv.appointment_id = a.id
+INNER JOIN services sv ON sv.id = asv.service_id
+WHERE a.appointment_date = :date
+  AND asv.barber_id = :barber
+  AND LOWER(st.name) IN ('pendiente', 'confirmada')
+  AND a.id <> :exclude
+GROUP BY a.id, a.appointment_time
+```
+
+- Solapamiento en minutos: nueva cita `[inicio, inicio + Σ duraciones)` vs existente `[inicio, inicio + busy_min)`; bloquea si `nuevoInicio < finExistente && inicioExistente < finNuevo`.
+- `nextAvailableSlot($date, $barberId, $newMinutes, $busyRows)` calcula la **próxima franja libre** (15 min) del barbero: recorre el horario de atención (día cerrado → `null`), descarta franjas que se solapen con las citas ocupadas, que no quepan completas (duración de la cita) o anteriores a `ahora+1h` (solo hoy). El resultado se incluye como `next_available` en cada conflicto y se usa en el mensaje *"… o agenda a partir de las HH:MM"*.
+- Se invoca desde `validateAppointment` (validación del servidor, un error por barbero listando las citas que chocan) y desde el endpoint AJAX `POST /appointments/availability` (JSON + CSRF), que responde `{ok, conflicts}`; al editar se envía `exclude_id` para excluir la propia cita.
+- `formView(..., $preserved)` re-renderiza el formulario con los datos capturados (`values`, `services`, `products`) cuando falla la validación, evitando perder lo ingresado.
+- Frontend: cada conflicto muestra bajo el barbero *"… o agenda a partir de las HH:MM"* con un botón **"Usar HH:MM"** que selecciona esa hora en el `<select>` y re-verifica; el banner superior resume los conflictos con "(disponible a partir de las HH:MM)".
+
 ---
 
 ## 7. Request / Response
@@ -254,7 +276,6 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 ## 12. Limitaciones técnicas conocidas
 
-- Sin validación de choque de horarios entre citas (agenda por barbero no bloquea solapamientos).
 - El listado de citas está limitado a `LIMIT 500`.
 - `Gallery::count` etc. dependen de `Model::where` (sin ORDER BY); el orden público se aplica con `usort` en el controlador.
 - Placeholders PDO nombrados no pueden repetirse en una misma consulta (hay que usar nombres distintos, ej. `:q` y `:q2`).

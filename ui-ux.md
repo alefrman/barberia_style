@@ -92,6 +92,7 @@ Paleta definida en `tailwind.config` (layouts público y admin) y referencias CS
 - **Tablas**: filas con `hover:bg-gold/5`, cabeceras en `uppercase tracking-widest`, miniaturas de imagen a la izquierda de la fila.
 - **Tarjetas de resumen** (dashboard, inventario, gastos): icono + número grande + etiqueta.
 - **Formularios**: inputs oscuros (`bg-dark/60`), borde sutil, focus dorado con anillo (`focus:border-gold/60 focus:ring-2 focus:ring-gold/20`), placeholder claro.
+- **Validación en vivo de agenda (citas)**: al cambiar fecha/hora/barbero/servicio se consulta la disponibilidad por AJAX (debounce 400 ms); los barberos con choque se marcan con borde y mensaje **rojo** (`border-red-500` + texto `text-red-400`) bajo su select, con botón **"Usar HH:MM"** que aplica la hora sugerida, y un **banner superior rojo** resume los conflictos con "(disponible a partir de las HH:MM)"; el botón de guardar queda bloqueado hasta resolverlos.
 - **Botón principal**: dorado (`bg-gold text-darkdeep`) con efecto `btn-shine`; botones secundarios con borde.
 - **Acciones por fila**: iconos de editar (lápiz) y eliminar (papelera) con `confirm` de JavaScript.
 - **Upload de imagen** con preview en vivo (FileReader → `#preview-img`).
