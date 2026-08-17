@@ -101,6 +101,7 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
             </thead>
             <tbody>
                 <?php foreach ($rows as $r): ?>
+                <?php $isCompleted = strtolower($r['status_name']) === 'completada'; ?>
                 <tr class="border-b border-white/5 hover:bg-gold/5 transition">
                     <td class="px-6 py-4">
                         <p class="font-medium text-white"><?= View::e(date('d/m/Y', strtotime($r['appointment_date']))) ?></p>
@@ -112,8 +113,10 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                     </td>
                     <td class="px-6 py-4 text-cream/70"><?= View::e($r['type_name']) ?></td>
                     <td class="px-6 py-4">
-                        <select data-status-select data-csrf="<?= View::e(Session::csrfToken()) ?>"
+                        <select data-status-select data-current-status="<?= View::e(strtolower($r['status_name'])) ?>"
+                                data-csrf="<?= View::e(Session::csrfToken()) ?>"
                                 data-url="<?= ADMIN_URL ?>/appointments/status/<?= (int) $r['id'] ?>"
+                                <?= $isCompleted ? 'disabled' : '' ?>
                                 class="px-3 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none appearance-none text-center <?= $statusBadge($r['status_name']) ?>">
                             <?php foreach ($statuses as $s): ?>
                                 <option value="<?= (int) $s->getAttribute('id') ?>" <?= (int) $r['status_id'] === (int) $s->getAttribute('id') ? 'selected' : '' ?>><?= View::e($s->getAttribute('name')) ?></option>
@@ -130,6 +133,7 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                             <a href="<?= ADMIN_URL ?>/appointments/show/<?= (int) $r['id'] ?>" title="Ver" class="w-9 h-9 rounded-lg bg-dark border border-white/10 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/40 transition">
                                 <i class="fa-solid fa-eye text-xs"></i>
                             </a>
+                            <?php if (!$isCompleted): ?>
                             <a href="<?= ADMIN_URL ?>/appointments/edit/<?= (int) $r['id'] ?>" title="Editar" class="w-9 h-9 rounded-lg bg-dark border border-white/10 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/40 transition">
                                 <i class="fa-solid fa-pen text-xs"></i>
                             </a>
@@ -139,6 +143,7 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                                     <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </form>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>
@@ -156,8 +161,80 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
     <?php endif; ?>
 </div>
 
+<!-- Modal de confirmación -->
+<div id="app-confirm-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div class="bg-darksoft border border-white/10 rounded-2xl shadow-2xl shadow-black/40 w-full max-w-md mx-4 p-8 text-center">
+        <div class="w-14 h-14 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center mx-auto mb-5">
+            <i class="fa-solid fa-triangle-exclamation text-gold text-xl"></i>
+        </div>
+        <h3 class="font-display text-xl font-semibold text-white mb-2">Confirmar acción</h3>
+        <p id="app-confirm-message" class="text-sm text-cream/60 mb-6">¿Estás seguro?</p>
+        <div class="mb-5">
+            <label class="block text-[11px] uppercase tracking-[.2em] text-cream/50 mb-2">Escribí <span class="font-bold text-gold">SI</span> para confirmar</label>
+            <input id="app-confirm-input" type="text" maxlength="2" autocomplete="off"
+                   class="w-24 mx-auto text-center text-lg font-bold uppercase tracking-widest px-4 py-3 rounded-xl bg-dark border border-white/10 text-white outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition placeholder:text-cream/30"
+                   placeholder="—">
+        </div>
+        <div class="flex gap-3">
+            <button id="app-confirm-cancel" type="button" class="flex-1 px-4 py-3 rounded-xl border border-white/10 text-cream/60 text-xs font-bold uppercase tracking-widest hover:bg-white/5 hover:text-white transition">
+                Cancelar
+            </button>
+            <button id="app-confirm-ok" type="button" disabled
+                    class="flex-1 px-4 py-3 rounded-xl bg-gold text-darkdeep text-xs font-bold uppercase tracking-widest transition opacity-40 cursor-not-allowed">
+                Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     (function () {
+        /* ---- Modal de confirmación ---- */
+        const modal       = document.getElementById('app-confirm-modal');
+        const modalMsg    = document.getElementById('app-confirm-message');
+        const modalInput  = document.getElementById('app-confirm-input');
+        const modalOk     = document.getElementById('app-confirm-ok');
+        const modalCancel = document.getElementById('app-confirm-cancel');
+        let modalResolve  = null;
+
+        function openModal(message) {
+            return new Promise((resolve) => {
+                modalResolve = resolve;
+                modalMsg.textContent = message;
+                modalInput.value = '';
+                modalOk.disabled = true;
+                modalOk.className = 'flex-1 px-4 py-3 rounded-xl bg-gold text-darkdeep text-xs font-bold uppercase tracking-widest transition opacity-40 cursor-not-allowed';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => modalInput.focus(), 50);
+            });
+        }
+
+        function closeModal(value) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (modalResolve) { modalResolve(value); modalResolve = null; }
+        }
+
+        modalInput.addEventListener('input', () => {
+            const match = modalInput.value.trim().toUpperCase() === 'SI';
+            modalOk.disabled = !match;
+            modalOk.className = match
+                ? 'flex-1 px-4 py-3 rounded-xl bg-gold text-darkdeep text-xs font-bold uppercase tracking-widest transition hover:bg-goldlight cursor-pointer'
+                : 'flex-1 px-4 py-3 rounded-xl bg-gold text-darkdeep text-xs font-bold uppercase tracking-widest transition opacity-40 cursor-not-allowed';
+        });
+
+        modalOk.addEventListener('click', () => closeModal(true));
+        modalCancel.addEventListener('click', () => closeModal(false));
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(false); });
+        modalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !modalOk.disabled) closeModal(true);
+            if (e.key === 'Escape') closeModal(false);
+        });
+
+        window.showAppConfirm = openModal;
+
+        /* ---- Status dropdown ---- */
         const classesByStatus = {
             'pendiente': 'bg-amber-500/10 text-amber-300 border-amber-500/30',
             'confirmada': 'bg-sky-500/10 text-sky-300 border-sky-500/30',
@@ -172,6 +249,17 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
 
             select.addEventListener('change', async () => {
                 const previous = select.dataset.previous;
+                const newVal = select.value;
+                const currentStatus = select.dataset.currentStatus;
+
+                if (newVal === '3' && currentStatus !== 'completada') {
+                    const confirmed = await showAppConfirm('¿Marcar esta cita como completada? Una vez completada no se podrá editar ni modificar.');
+                    if (!confirmed) {
+                        select.value = previous;
+                        return;
+                    }
+                }
+
                 select.disabled = true;
 
                 const applyColors = () => {

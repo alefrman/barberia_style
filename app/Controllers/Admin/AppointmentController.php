@@ -207,6 +207,11 @@ class AppointmentController extends Controller
             return $this->redirect('/admin.php/appointments');
         }
 
+        if (strtolower((string) $appointment->getAttribute('status_name')) === 'completada') {
+            Session::flash('error', 'La cita completada no se puede editar.');
+            return $this->redirect('/admin.php/appointments');
+        }
+
         return $this->formView($appointment, 'Editar cita');
     }
 
@@ -224,6 +229,11 @@ class AppointmentController extends Controller
 
         if ($appointment === null) {
             Session::flash('error', 'Cita no encontrada.');
+            return $this->redirect('/admin.php/appointments');
+        }
+
+        if (strtolower((string) $appointment->getAttribute('status_name')) === 'completada') {
+            Session::flash('error', 'La cita completada no se puede editar.');
             return $this->redirect('/admin.php/appointments');
         }
 
@@ -284,9 +294,17 @@ class AppointmentController extends Controller
         $id = (int) ($params['id'] ?? 0);
         $statusId = (int) $request->input('status_id', 0);
 
-        if (Appointment::find($id) === null) {
+        $appointment = Appointment::find($id);
+
+        if ($appointment === null) {
             return $request->wantsJson()
                 ? $this->json(['ok' => false, 'message' => 'Cita no encontrada.'], 404)
+                : $this->redirect('/admin.php/appointments');
+        }
+
+        if (strtolower((string) $appointment->getAttribute('status_name')) === 'completada') {
+            return $request->wantsJson()
+                ? $this->json(['ok' => false, 'message' => 'La cita completada no puede cambiar de estado.'], 422)
                 : $this->redirect('/admin.php/appointments');
         }
 
