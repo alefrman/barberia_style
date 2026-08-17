@@ -22,6 +22,7 @@ use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\ExpenseController;
 use App\Controllers\Admin\GalleryController;
 use App\Controllers\Admin\SettingController;
+use App\Controllers\Admin\ReportController;
 
 Config::load(BASE_PATH);
 require BASE_PATH . '/app/Config/config.php';
@@ -110,6 +111,10 @@ $router->post('/gallery/store', GalleryController::class . '@store', [AuthMiddle
 $router->get('/gallery/edit/{id}', GalleryController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/gallery/update/{id}', GalleryController::class . '@update', [AuthMiddleware::class]);
 $router->post('/gallery/delete/{id}', GalleryController::class . '@destroy', [AuthMiddleware::class]);
+
+// ============ MÓDULO REPORTES ============
+$router->get('/reports', ReportController::class . '@index', [AuthMiddleware::class]);
+$router->get('/reports/pdf', ReportController::class . '@pdf', [AuthMiddleware::class]);
 
 // ============ MÓDULO CONFIGURACIÓN (solo Superadmin) ============
 $router->get('/settings', SettingController::class . '@index', [AuthMiddleware::class, [RoleMiddleware::class, ['Superadmin']]]);

@@ -102,6 +102,11 @@ $flashes = Session::getFlashes();
                 <i class="fa-solid fa-images w-5"></i><span class="nav-link-text">Galería</span>
             </a>
 
+            <p class="nav-section-label px-3 pt-6 pb-2 text-[10px] uppercase tracking-[.25em] text-cream/40">Reportes</p>
+            <a href="<?= ADMIN_URL ?>/reports" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'reports' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-chart-pie w-5"></i><span class="nav-link-text">Reportes</span>
+            </a>
+
             <p class="nav-section-label px-3 pt-6 pb-2 text-[10px] uppercase tracking-[.25em] text-cream/40">Sistema</p>
             <?php if ($isSuperAdmin): ?>
             <a href="<?= ADMIN_URL ?>/users" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'users' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
@@ -164,6 +169,7 @@ $flashes = Session::getFlashes();
                 <a href="<?= ADMIN_URL ?>/team" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Barberos</a>
                 <a href="<?= ADMIN_URL ?>/expenses" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Gastos</a>
                 <a href="<?= ADMIN_URL ?>/gallery" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Galería</a>
+                <a href="<?= ADMIN_URL ?>/reports" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Reportes</a>
                 <?php if ($isSuperAdmin): ?>
                 <a href="<?= ADMIN_URL ?>/users" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Usuarios</a>
                 <a href="<?= ADMIN_URL ?>/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Configuración</a>
