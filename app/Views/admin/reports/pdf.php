@@ -25,16 +25,16 @@ $topServicesRows = '';
 if ($topServices !== []) {
     foreach ($topServices as $ts) {
         $topServicesRows .= '<tr>'
-            . '<td class="td-l">' . View::e($ts['name']) . '</td>'
-            . '<td class="td-c">' . (int) $ts['count'] . '</td>'
-            . '<td class="td-r">' . Money::format((float) $ts['total']) . '</td>'
+            . '<td>' . View::e($ts['name']) . '</td>'
+            . '<td class="c">' . (int) $ts['count'] . '</td>'
+            . '<td class="r">' . Money::format((float) $ts['total']) . '</td>'
             . '</tr>';
     }
     $topServicesTotal = array_sum(array_map(fn ($r) => (float) $r['total'], $topServices));
     $topServicesRows .= '<tr class="row-total">'
-        . '<td class="td-l">Total</td>'
-        . '<td class="td-c">' . array_sum(array_map(fn ($r) => (int) $r['count'], $topServices)) . '</td>'
-        . '<td class="td-r">' . Money::format($topServicesTotal) . '</td>'
+        . '<td>Total</td>'
+        . '<td class="c">' . array_sum(array_map(fn ($r) => (int) $r['count'], $topServices)) . '</td>'
+        . '<td class="r">' . Money::format($topServicesTotal) . '</td>'
         . '</tr>';
 } else {
     $topServicesRows = '<tr><td colspan="3" class="empty">Sin datos en este período</td></tr>';
@@ -46,15 +46,15 @@ if ($expensesByCategory !== []) {
     foreach ($expensesByCategory as $ec) {
         $pct = round(((float) $ec['total'] / $totalForPct) * 100, 1);
         $expensesRows .= '<tr>'
-            . '<td class="td-l">' . View::e($ec['name']) . '</td>'
-            . '<td class="td-r">' . Money::format((float) $ec['total']) . '</td>'
-            . '<td class="td-r">' . $pct . '%</td>'
+            . '<td>' . View::e($ec['name']) . '</td>'
+            . '<td class="r">' . Money::format((float) $ec['total']) . '</td>'
+            . '<td class="r">' . $pct . '%</td>'
             . '</tr>';
     }
     $expensesRows .= '<tr class="row-total">'
-        . '<td class="td-l">Total</td>'
-        . '<td class="td-r">' . Money::format($totalExpenses) . '</td>'
-        . '<td class="td-r">100%</td>'
+        . '<td>Total</td>'
+        . '<td class="r">' . Money::format($totalExpenses) . '</td>'
+        . '<td class="r">100%</td>'
         . '</tr>';
 } else {
     $expensesRows = '<tr><td colspan="3" class="empty">Sin gastos en este período</td></tr>';
@@ -71,7 +71,13 @@ $logoHtml = $logo !== ''
     <style>
         @page {
             size: letter portrait;
-            margin: 18mm 16mm 16mm 16mm;
+            margin: 18mm 16mm 22mm 16mm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Helvetica, Arial, sans-serif;
+                font-size: 9px;
+                color: #b0b7c0;
+            }
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
@@ -127,7 +133,6 @@ $logoHtml = $logo !== ''
             border-top: 1px solid #e5e7eb; text-align: center;
             font-size: 9px; color: #9ca3af;
         }
-        .page-num { margin-top: 4px; color: #b0b7c0; }
     </style>
 </head>
 <body>
@@ -194,7 +199,6 @@ $logoHtml = $logo !== ''
 
     <div class="footer">
         <?= View::e($siteName) ?><?= $siteAddress !== '' ? ' — ' . View::e($siteAddress) : '' ?>
-        <div class="page-num">Página {PAGE_NUM} de {PAGE_COUNT}</div>
     </div>
 </body>
 </html>
