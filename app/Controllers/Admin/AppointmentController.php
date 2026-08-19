@@ -55,8 +55,10 @@ class AppointmentController extends Controller
             $bind['date_to'] = $dateTo;
         }
         if ($q !== '') {
-            $where[] = '(a.client_name LIKE :q OR a.client_phone LIKE :q OR a.client_email LIKE :q)';
-            $bind['q'] = '%' . $q . '%';
+            $where[] = '(a.client_name LIKE :q1 OR a.client_phone LIKE :q2 OR a.client_email LIKE :q3)';
+            $bind['q1'] = '%' . $q . '%';
+            $bind['q2'] = '%' . $q . '%';
+            $bind['q3'] = '%' . $q . '%';
         }
 
         $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
