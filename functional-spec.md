@@ -45,8 +45,8 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 ### 2.2 Gráficas (Chart.js por CDN)
 
-1. **Barras — Ingresos vs Gastos**: últimos 12 meses, series mensuales (meses sin datos se completan con 0).
-2. **Línea — Ganancia neta mensual**: ingresos − gastos por mes (misma ventana de 12 meses).
+1. **Barras — Ingresos vs Gastos**: desde el **primer mes con datos** hasta el mes actual, series mensuales (meses sin datos se completan con 0).
+2. **Línea — Ganancia neta mensual**: ingresos − gastos por mes (mismo rango dinámico).
 3. **Dona — Gastos por categoría**: total por `expense_categories` del mes actual ("Sin categoría" para gastos sin categoría).
 4. **Dona — Gastos por método de pago**: total por `payment_method` del mes actual.
 5. **Barras — Estados de cita**: conteo de **Completada / No asistió / Cancelada** con **filtro**:

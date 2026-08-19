@@ -60,7 +60,7 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 - Tarjetas de resumen: **citas de hoy**, **total de servicios**, **total de productos**, **total de gastos**.
 - **KPIs financieros del mes**: ingresos, gastos, ganancia neta (ingresos − gastos) y ticket promedio.
 - **Gráficas con Chart.js (CDN)**:
-  - Barras: ingresos vs gastos de los últimos 12 meses.
+  - Barras: ingresos vs gastos desde el **primer mes con datos**.
   - Línea: ganancia neta mensual.
   - Donas: gastos del mes por categoría y por método de pago.
   - Barras: estados de cita (**Completada / No asistió / Cancelada**) con **filtro por mes o semana actual** (`?period=month|week`).

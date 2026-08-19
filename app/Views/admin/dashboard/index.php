@@ -88,7 +88,7 @@ $monthTicket = (float) ($monthTicket ?? 0);
 <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-5">
 
     <div class="lg:col-span-2 bg-darksoft rounded-2xl border border-white/5 p-6">
-        <h3 class="font-display text-lg font-semibold text-white">Ingresos vs Gastos (12 meses)</h3>
+        <h3 class="font-display text-lg font-semibold text-white">Ingresos vs Gastos</h3>
         <p class="text-xs text-cream/50 mt-1">Comparativa mensual de citas completadas contra gastos registrados.</p>
         <div class="h-72 mt-4">
             <canvas id="chart-income-expense"></canvas>

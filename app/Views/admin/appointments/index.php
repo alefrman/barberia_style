@@ -101,7 +101,7 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
             </thead>
             <tbody>
                 <?php foreach ($rows as $r): ?>
-                <?php $isCompleted = strtolower($r['status_name']) === 'completada'; ?>
+                <?php $isFinal = in_array(strtolower($r['status_name']), ['completada', 'cancelada', 'no asistió'], true); ?>
                 <tr class="border-b border-white/5 hover:bg-gold/5 transition">
                     <td class="px-6 py-4">
                         <p class="font-medium text-white"><?= View::e(date('d/m/Y', strtotime($r['appointment_date']))) ?></p>
@@ -116,7 +116,7 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                         <select data-status-select data-current-status="<?= View::e(strtolower($r['status_name'])) ?>"
                                 data-csrf="<?= View::e(Session::csrfToken()) ?>"
                                 data-url="<?= ADMIN_URL ?>/appointments/status/<?= (int) $r['id'] ?>"
-                                <?= $isCompleted ? 'disabled' : '' ?>
+                                <?= $isFinal ? 'disabled' : '' ?>
                                 class="px-3 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none appearance-none text-center <?= $statusBadge($r['status_name']) ?>">
                             <?php foreach ($statuses as $s): ?>
                                 <option value="<?= (int) $s->getAttribute('id') ?>" <?= (int) $r['status_id'] === (int) $s->getAttribute('id') ? 'selected' : '' ?>><?= View::e($s->getAttribute('name')) ?></option>
@@ -133,7 +133,7 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                             <a href="<?= ADMIN_URL ?>/appointments/show/<?= (int) $r['id'] ?>" title="Ver" class="w-9 h-9 rounded-lg bg-dark border border-white/10 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/40 transition">
                                 <i class="fa-solid fa-eye text-xs"></i>
                             </a>
-                            <?php if (!$isCompleted): ?>
+                            <?php if (!$isFinal): ?>
                             <a href="<?= ADMIN_URL ?>/appointments/edit/<?= (int) $r['id'] ?>" title="Editar" class="w-9 h-9 rounded-lg bg-dark border border-white/10 flex items-center justify-center text-cream/70 hover:text-goldlight hover:border-gold/40 transition">
                                 <i class="fa-solid fa-pen text-xs"></i>
                             </a>
@@ -254,6 +254,22 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
 
                 if (newVal === '3' && currentStatus !== 'completada') {
                     const confirmed = await showAppConfirm('¿Marcar esta cita como completada? Una vez completada no se podrá editar ni modificar.');
+                    if (!confirmed) {
+                        select.value = previous;
+                        return;
+                    }
+                }
+
+                if (newVal === '4' && currentStatus !== 'cancelada') {
+                    const confirmed = await showAppConfirm('¿Marcar esta cita como cancelada?');
+                    if (!confirmed) {
+                        select.value = previous;
+                        return;
+                    }
+                }
+
+                if (newVal === '5' && currentStatus !== 'no asistió') {
+                    const confirmed = await showAppConfirm('¿Marcar esta cita como no asistió?');
                     if (!confirmed) {
                         select.value = previous;
                         return;

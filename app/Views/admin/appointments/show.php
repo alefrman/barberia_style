@@ -31,8 +31,8 @@ $statusBadge = fn(string $name): string => match (strtolower($name)) {
                 </p>
             </div>
         </div>
-        <?php $isCompleted = strtolower($row['status_name']) === 'completada'; ?>
-        <?php if (!$isCompleted): ?>
+        <?php $isFinal = in_array(strtolower($row['status_name']), ['completada', 'cancelada', 'no asistió'], true); ?>
+        <?php if (!$isFinal): ?>
         <div class="flex gap-2">
             <a href="<?= ADMIN_URL ?>/appointments/edit/<?= (int) $row['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gold/40 text-goldlight text-xs font-bold uppercase tracking-widest hover:bg-gold/10 transition">
                 <i class="fa-solid fa-pen"></i> Editar

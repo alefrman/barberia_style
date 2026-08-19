@@ -184,7 +184,7 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 ### 6.4 Consultas financieras del dashboard
 - **Ingreso = solo citas "Completada"**: el dashboard une `appointments` con `appointment_statuses` y filtra `LOWER(s.name) = 'completada'`.
-- Series de 12 meses: `GROUP BY DATE_FORMAT(..., '%Y-%m')` sobre ingresos (citas completadas) y gastos, rellenando meses vacíos con `0` en PHP.
+- Series mensuales desde el primer mes con datos: `GROUP BY DATE_FORMAT(..., '%Y-%m')` sobre ingresos (citas completadas) y gastos, rellenando meses vacíos con `0` en PHP.
 - Gastos del mes: `GROUP BY` categoría (`LEFT JOIN expense_categories`, alias "Sin categoría") y método de pago.
 - Estados de cita: `GROUP BY status name` para `completada` / `no asistió` / `cancelada`, filtrado por rango de fechas según `?period=week` (lunes a domingo) o el mes calendario.
 

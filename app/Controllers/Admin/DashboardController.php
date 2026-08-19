@@ -54,7 +54,7 @@ class DashboardController extends Controller
                AND DATE_FORMAT(a.appointment_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
         ) ?? 0);
 
-        // Series mensuales (últimos 12 meses)
+        // Series mensuales (desde el primer mes con datos)
         [$labels, $incomeByMonth, $expensesByMonth] = $this->monthlySeries();
 
         // Gastos del mes por categoría y método de pago
@@ -116,29 +116,51 @@ class DashboardController extends Controller
     }
 
     /**
-     * Etiquetas y series mensuales de ingresos/gastos para los últimos 12 meses.
+     * Etiquetas y series mensuales de ingresos/gastos.
+     * Detecta automáticamente el primer mes con datos y genera el rango hasta el mes actual.
      *
      * @return array{0: string[], 1: float[], 2: float[]}
      */
     private function monthlySeries(): array
     {
+        // Encontrar el mes más antiguo con datos (ingresos o gastos)
+        $earliest = Database::fetchValue(
+            "SELECT MIN(ym) FROM (
+                SELECT DATE_FORMAT(a.appointment_date, '%Y-%m') AS ym
+                FROM appointments a
+                INNER JOIN appointment_statuses s ON s.id = a.status_id
+                WHERE LOWER(s.name) = 'completada'
+                UNION
+                SELECT DATE_FORMAT(expense_date, '%Y-%m') AS ym
+                FROM expenses
+            ) AS all_data"
+        );
+
+        $start = $earliest ?? date('Y-m');
+
+        // Generar rango desde el primer mes con datos hasta el mes actual
         $months = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $key = date('Y-m', strtotime("-{$i} months"));
+        $current = new \DateTime(date('Y-m'));
+        $from = new \DateTime($start);
+        while ($from <= $current) {
+            $key = $from->format('Y-m');
             $months[$key] = [
                 'label' => $this->shortMonth($key),
                 'income' => 0.0,
                 'expenses' => 0.0,
             ];
+            $from->modify('+1 month');
         }
 
+        // Llenar ingresos
         $incomeRows = Database::fetchAll(
             "SELECT DATE_FORMAT(a.appointment_date, '%Y-%m') AS ym, SUM(a.total) AS total
              FROM appointments a
              INNER JOIN appointment_statuses s ON s.id = a.status_id
              WHERE LOWER(s.name) = 'completada'
-               AND a.appointment_date >= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
-             GROUP BY ym"
+               AND a.appointment_date >= :start
+             GROUP BY ym",
+            ['start' => $start . '-01']
         );
         foreach ($incomeRows as $row) {
             if (isset($months[$row['ym']])) {
@@ -146,11 +168,13 @@ class DashboardController extends Controller
             }
         }
 
+        // Llenar gastos
         $expenseRows = Database::fetchAll(
             "SELECT DATE_FORMAT(expense_date, '%Y-%m') AS ym, SUM(amount) AS total
              FROM expenses
-             WHERE expense_date >= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
-             GROUP BY ym"
+             WHERE expense_date >= :start
+             GROUP BY ym",
+            ['start' => $start . '-01']
         );
         foreach ($expenseRows as $row) {
             if (isset($months[$row['ym']])) {

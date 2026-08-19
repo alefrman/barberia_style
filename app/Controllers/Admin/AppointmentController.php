@@ -207,8 +207,9 @@ class AppointmentController extends Controller
             return $this->redirect('/admin.php/appointments');
         }
 
-        if (strtolower((string) $appointment->getAttribute('status_name')) === 'completada') {
-            Session::flash('error', 'La cita completada no se puede editar.');
+        $status = strtolower((string) $appointment->getAttribute('status_name'));
+        if (in_array($status, ['completada', 'cancelada', 'no asistió'], true)) {
+            Session::flash('error', 'Esta cita no se puede editar.');
             return $this->redirect('/admin.php/appointments');
         }
 
@@ -232,8 +233,9 @@ class AppointmentController extends Controller
             return $this->redirect('/admin.php/appointments');
         }
 
-        if (strtolower((string) $appointment->getAttribute('status_name')) === 'completada') {
-            Session::flash('error', 'La cita completada no se puede editar.');
+        $status = strtolower((string) $appointment->getAttribute('status_name'));
+        if (in_array($status, ['completada', 'cancelada', 'no asistió'], true)) {
+            Session::flash('error', 'Esta cita no se puede editar.');
             return $this->redirect('/admin.php/appointments');
         }
 
