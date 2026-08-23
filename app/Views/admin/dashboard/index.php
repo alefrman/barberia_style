@@ -15,6 +15,7 @@ $monthIncome = (float) ($monthIncome ?? 0);
 $monthExpenses = (float) ($monthExpenses ?? 0);
 $monthProfit = (float) ($monthProfit ?? 0);
 $monthTicket = (float) ($monthTicket ?? 0);
+$totalProductSales = (float) ($totalProductSales ?? 0);
 ?>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
@@ -61,7 +62,7 @@ $monthTicket = (float) ($monthTicket ?? 0);
 </div>
 
 <!-- ============ KPIs FINANCIEROS ============ -->
-<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5">
     <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-emerald-500/30 transition">
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Ingresos del mes</p>
         <p class="mt-2 font-display text-2xl font-semibold text-emerald-400"><?= Money::format($monthIncome) ?></p>
@@ -76,6 +77,11 @@ $monthTicket = (float) ($monthTicket ?? 0);
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Ganancia neta</p>
         <p class="mt-2 font-display text-2xl font-semibold <?= $monthProfit >= 0 ? 'text-goldlight' : 'text-red-400' ?>"><?= Money::format($monthProfit) ?></p>
         <p class="mt-1 text-xs text-cream/40">Ingresos − gastos</p>
+    </div>
+    <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-gold/30 transition">
+        <p class="text-[11px] uppercase tracking-widest text-cream/50">Ventas de productos</p>
+        <p class="mt-2 font-display text-2xl font-semibold text-goldlight"><?= Money::format($totalProductSales) ?></p>
+        <p class="mt-1 text-xs text-cream/40">Solo citas completadas</p>
     </div>
     <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-sky-500/30 transition">
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Ticket promedio</p>

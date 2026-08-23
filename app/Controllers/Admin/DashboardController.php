@@ -78,10 +78,17 @@ class DashboardController extends Controller
         // Conteo por estado de cita (Completada / No asistió / Cancelada) con filtro mes o semana
         [$statusRange, $statusLabels, $statusCounts] = $this->statusCounts($period);
 
-        // Productos: más vendidos y ganancia pendiente
+        // Productos: más vendidos, total de unidades y total de ventas en $
         $topProducts = $this->topProducts();
         $topProductsTotal = (int) (Database::fetchValue(
             "SELECT COALESCE(SUM(ap.quantity), 0)
+             FROM appointment_products ap
+             INNER JOIN appointments a          ON a.id = ap.appointment_id
+             INNER JOIN appointment_statuses s  ON s.id = a.status_id
+             WHERE LOWER(s.name) = 'completada'"
+        ) ?? 0);
+        $totalProductSales = (float) (Database::fetchValue(
+            "SELECT COALESCE(SUM(ap.price * ap.quantity), 0)
              FROM appointment_products ap
              INNER JOIN appointments a          ON a.id = ap.appointment_id
              INNER JOIN appointment_statuses s  ON s.id = a.status_id
@@ -112,6 +119,7 @@ class DashboardController extends Controller
             'statusCounts'     => $statusCounts,
             'topProducts'      => $topProducts,
             'topProductsTotal' => $topProductsTotal,
+            'totalProductSales' => $totalProductSales,
         ], 'admin');
     }
 

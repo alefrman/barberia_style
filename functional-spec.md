@@ -41,6 +41,7 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 | Ingresos del mes | Suma de `appointments.total` de citas con estado **"Completada"** en el mes actual. |
 | Gastos del mes | Suma de `expenses.amount` del mes actual. |
 | Ganancia neta | Ingresos del mes − gastos del mes (se pinta en rojo si es negativa). |
+| Ventas de productos | Suma de `appointment_products.price × quantity` de citas con estado **"Completada"** en el mes actual. |
 | Ticket promedio | Ingresos del mes ÷ número de citas completadas del mes. |
 
 ### 2.2 Gráficas (Chart.js por CDN)
