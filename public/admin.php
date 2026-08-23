@@ -23,6 +23,7 @@ use App\Controllers\Admin\ExpenseController;
 use App\Controllers\Admin\GalleryController;
 use App\Controllers\Admin\SettingController;
 use App\Controllers\Admin\ReportController;
+use App\Controllers\Admin\InvoiceController;
 
 Config::load(BASE_PATH);
 require BASE_PATH . '/app/Config/config.php';
@@ -103,6 +104,13 @@ $router->post('/expenses/store', ExpenseController::class . '@store', [AuthMiddl
 $router->get('/expenses/edit/{id}', ExpenseController::class . '@edit', [AuthMiddleware::class]);
 $router->post('/expenses/update/{id}', ExpenseController::class . '@update', [AuthMiddleware::class]);
 $router->post('/expenses/delete/{id}', ExpenseController::class . '@destroy', [AuthMiddleware::class]);
+
+// ============ MÓDULO PUNTO DE VENTA (FACTURAS) ============
+$router->get('/invoices', InvoiceController::class . '@index', [AuthMiddleware::class]);
+$router->get('/invoices/create', InvoiceController::class . '@create', [AuthMiddleware::class]);
+$router->post('/invoices/store', InvoiceController::class . '@store', [AuthMiddleware::class]);
+$router->get('/invoices/show/{id}', InvoiceController::class . '@show', [AuthMiddleware::class]);
+$router->post('/invoices/delete/{id}', InvoiceController::class . '@destroy', [AuthMiddleware::class]);
 
 // ============ MÓDULO GALERÍA ============
 $router->get('/gallery', GalleryController::class . '@index', [AuthMiddleware::class]);

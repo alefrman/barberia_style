@@ -125,7 +125,7 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 > **Nota**: `save()` es solo UPDATE. Para insertar usar siempre `create()`.
 
-### 5.3 Modelos (17)
+### 5.3 Modelos (19)
 
 | Modelo | Tabla |
 |---|---|
@@ -139,6 +139,8 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 | `Service` / `ServiceCategory` | `services` / `service_categories` |
 | `Product` / `ProductCategory` | `products` / `product_categories` |
 | `InventoryMovement` | `inventory_movements` |
+| `Invoice` | `invoices` |
+| `InvoiceProduct` | `invoice_products` |
 | `Team` | `team` |
 | `Gallery` | `gallery` |
 | `Expense` / `ExpenseCategory` | `expenses` / `expense_categories` |
@@ -148,15 +150,17 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 
 ## 6. Base de datos
 
-### 6.1 Tablas (17)
+### 6.1 Tablas (19)
 
 **Catálogos (6)**: `roles`, `appointment_types`, `appointment_statuses`, `service_categories`, `product_categories`, `expense_categories`.
 
-**Principales (11)**:
+**Principales (13)**:
 - `users` — cuenta de acceso al panel (`role_id` FK → roles RESTRICT).
 - `services` — catálogo de cortes (categoría FK SET NULL, precio, duración, imagen, activo, orden).
 - `products` — inventario (categoría FK SET NULL, precio/costo, stock/min_stock, imagen).
 - `inventory_movements` — historial de stock (`product_id` FK CASCADE, `type` creation|restock|edit, cantidad con signo, stock antes/después, nota, `created_by` FK SET NULL).
+- `invoices` — facturas del punto de venta (número auto, cliente, método de pago, total, notas).
+- `invoice_products` — productos de la factura (historiza precio y cantidad). FK: invoice CASCADE, product RESTRICT.
 - `team` — barberos.
 - `gallery` — fotos del portafolio.
 - `appointments` — cabecera de cita (tipo, estado, cliente, fecha/hora, subtotal/total, `created_by`).
@@ -171,7 +175,9 @@ Los modelos concretos solo definen `protected string $table` y `protected array 
 |---|---|
 | `appointment_services.service_id → services` (RESTRICT) | No se puede borrar un servicio usado en citas. |
 | `appointment_products.product_id → products` (RESTRICT) | No se puede borrar un producto vendido. |
+| `invoice_products.product_id → products` (RESTRICT) | No se puede borrar un producto facturado. |
 | Detalles de cita → `appointments` (CASCADE) | Borrar la cita borra sus detalles. |
+| Detalles de factura → `invoices` (CASCADE) | Borrar la factura restaura stock y borra detalles. |
 | Categorías de servicios/productos/gastos | SET NULL al borrar. |
 | `users.role_id → roles` | RESTRICT. |
 

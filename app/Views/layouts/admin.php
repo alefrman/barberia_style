@@ -86,6 +86,9 @@ $flashes = Session::getFlashes();
             <a href="<?= ADMIN_URL ?>/appointments" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'appointments' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
                 <i class="fa-solid fa-calendar-check w-5"></i><span class="nav-link-text">Citas</span>
             </a>
+            <a href="<?= ADMIN_URL ?>/invoices" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'invoices' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
+                <i class="fa-solid fa-cash-register w-5"></i><span class="nav-link-text">Punto de venta</span>
+            </a>
             <a href="<?= ADMIN_URL ?>/inventory" class="admin-nav-link relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition <?= $activeAdmin === 'inventory' ? 'bg-gold/10 text-goldlight border border-gold/30' : 'text-cream/70 hover:bg-gold/5 hover:text-goldlight' ?>">
                 <i class="fa-solid fa-boxes-stacked w-5"></i><span class="nav-link-text">Inventario</span>
             </a>
@@ -164,6 +167,7 @@ $flashes = Session::getFlashes();
             <nav class="space-y-1 text-sm">
                 <a href="<?= ADMIN_URL ?>/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Dashboard</a>
                 <a href="<?= ADMIN_URL ?>/appointments" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Citas</a>
+                <a href="<?= ADMIN_URL ?>/invoices" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Punto de venta</a>
                 <a href="<?= ADMIN_URL ?>/inventory" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Inventario</a>
                 <a href="<?= ADMIN_URL ?>/services" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Servicios</a>
                 <a href="<?= ADMIN_URL ?>/team" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream/80 hover:bg-gold/5">Barberos</a>

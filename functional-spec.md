@@ -241,14 +241,32 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 ---
 
-## 10. Configuración del sitio (settings)
+## 10. Punto de venta (facturas)
+
+| Campo | Regla |
+|---|---|
+| Número de factura | Auto: `FAC-XXXX` (secuencial desde settings `invoice_next_number`) |
+| Nombre del cliente | Obligatorio, máx 150 |
+| Teléfono del cliente | Opcional, máx 20 |
+| Método de pago | Obligatorio: Efectivo, Tarjeta, Transferencia, Otro |
+| Notas | Opcional, máx 255 |
+| Productos | Al menos 1; cada uno: `product_id` (debe existir), `quantity` (1–99) |
+
+**Reglas de negocio**
+- Al guardar: se descuenta el stock de cada producto y se registra un movimiento de tipo `venta` en `inventory_movements`.
+- Al eliminar: se restaura el stock de cada producto y se registra un movimiento de tipo `reversión`.
+- Validación de CSRF en todas las mutaciones.
+
+---
+
+## 11. Configuración del sitio (settings)
 
 - La vista pública lee de `settings`: teléfono, email y dirección (footer y CTA).
 - Horarios, impuestos y moneda están definidos en el seed (JSON en `business_hours`), actualmente sin UI de edición en el panel.
 
 ---
 
-## 11. Reglas de validación transversales
+## 12. Reglas de validación transversales
 
 | Concepto | Regla |
 |---|---|
@@ -263,7 +281,7 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 ---
 
-## 12. Flujo de errores y feedback
+## 13. Flujo de errores y feedback
 
 - **Errores de validación**: flash de error con el primer mensaje y redirección de vuelta al formulario.
 - **Éxito**: flash de éxito con mensaje descriptivo.
@@ -273,7 +291,7 @@ Requisitos funcionales, reglas de negocio y validaciones de cada módulo.
 
 ---
 
-## 13. Requisitos futuros (fuera de alcance actual)
+## 14. Requisitos futuros (fuera de alcance actual)
 
 1. Reserva en línea desde el sitio público.
 2. Impresión de recibos.

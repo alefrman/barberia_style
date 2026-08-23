@@ -81,14 +81,27 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 - **Formulario persistente**: si la validación del servidor falla (p. ej. choque de horarios), se re-renderiza el formulario con los datos capturados para poder cambiar de barbero/hora sin perder nada.
 - Guardado con **transacciones SQL** (todo o nada).
 
-### 3.4 Servicios
+### 3.4 Punto de venta (facturas)
+- **POS rápido** para ventas de productos sin servicio.
+- **Datos del cliente**: nombre obligatorio, teléfono opcional.
+- **Selección de productos**: select con precio y stock, cantidad (1–99), botón "Agregar". Lista dinámica con subtotal por línea y total general.
+- **Método de pago**: Efectivo, Tarjeta, Transferencia, Otro.
+- **Notas** opcionales.
+- **Numeración automática** de facturas (`FAC-0001`, `FAC-0002`... configurable vía settings).
+- **Control de stock**: al guardar se descuenta el stock y se registra un movimiento de tipo `venta` en `inventory_movements`.
+- **Eliminar factura**: restaura el stock de cada producto y registra un movimiento de tipo `reversión`.
+- **Vista de detalle**: cabecera (#, fecha, cajero), cliente, productos, total, método de pago, botón eliminar.
+- **Listado**: tabla con #, fecha, cliente, cantidad de productos, método de pago, total, acciones (ver/eliminar).
+- Guardado con **transacciones SQL** (todo o nada).
+
+### 3.5 Servicios
 - CRUD completo de servicios del catálogo.
 - **Categorías** con creación inline ("Nueva categoría" sin salir del formulario).
 - **Imagen** opcional con preview (JPG/PNG/WEBP/GIF, máx 2 MB).
 - Campos: categoría, nombre, descripción, precio (USD), duración (min), orden, activo/inactivo.
 - La eliminación se bloquea si el servicio está asociado a una cita (FK RESTRICT) con mensaje amigable.
 
-### 3.5 Inventario (productos)
+### 3.6 Inventario (productos)
 - CRUD de productos en venta.
 - **Categorías** con creación inline.
 - Campos: categoría, nombre, descripción, precio (USD), costo (USD), **stock**, **stock mínimo**, imagen, orden, activo/inactivo.
@@ -98,11 +111,11 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 - **Historial de movimientos de stock**: botón reloj por producto → página con formulario **Reponer stock** (cantidad + nota opcional) y tabla de movimientos (creación, reposición, ajuste al editar) con fecha, cantidad, stock antes → después, nota y usuario que registró.
 - La eliminación se bloquea si el producto está en una cita.
 
-### 3.6 Barberos (equipo)
+### 3.7 Barberos (equipo)
 - CRUD de miembros del equipo.
 - Campos: nombre, cargo, descripción, imagen, orden, activo/inactivo.
 
-### 3.7 Gastos
+### 3.8 Gastos
 - CRUD de salidas de efectivo.
 - **Categorías** con creación inline.
 - Campos: categoría, descripción, **monto** (USD, mayor a 0), fecha, **método de pago** (Efectivo/Tarjeta/Transferencia/Otro), notas.
@@ -110,12 +123,12 @@ Sistema web completo para una barbería con **sitio público** (vitrina) y **pan
 - **Filtros**: búsqueda, categoría, rango de fechas.
 - **Tarjetas de resumen**: gastos de hoy, total del mes, cantidad de gastos del mes, total acumulado.
 
-### 3.8 Galería (portafolio)
+### 3.9 Galería (portafolio)
 - CRUD de fotos del portafolio.
 - Campos: título (obligatorio), descripción, imagen, orden, activo/inactivo.
 - Al eliminar una foto se borra también el archivo del disco.
 
-### 3.9 Usuarios (solo Superadmin)
+### 3.10 Usuarios (solo Superadmin)
 - CRUD de usuarios del panel.
 - Roles asignables, email único, contraseña mínima 6 caracteres.
 - **Auto-protección**: no puedes eliminar, desactivar ni cambiar el rol de tu propia cuenta.
