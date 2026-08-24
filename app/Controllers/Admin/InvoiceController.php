@@ -201,7 +201,7 @@ class InvoiceController extends Controller
         }
 
         if ($isAjax) {
-            return $this->json(['success' => true, 'redirect' => '/admin.php/invoices/show/' . $invoiceId]);
+            return $this->json(['success' => true, 'redirect' => ADMIN_URL . '/invoices/show/' . $invoiceId]);
         }
 
         Session::flash('success', "Factura {$invoiceNumber} registrada.");

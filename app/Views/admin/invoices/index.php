@@ -124,6 +124,11 @@ $invoices = $invoices ?? [];
                 .then(r => r.text())
                 .then(html => {
                     modalBody.innerHTML = html;
+                    modalBody.querySelectorAll('script').forEach(old => {
+                        const s = document.createElement('script');
+                        s.textContent = old.textContent;
+                        old.replaceWith(s);
+                    });
                     loaded = true;
                 })
                 .catch(() => {
