@@ -20,6 +20,7 @@ $netProfit       = $netProfit ?? 0;
 $completedCount  = $completedCount ?? 0;
 $topServices     = $topServices ?? [];
 $expensesByCategory = $expensesByCategory ?? [];
+$barberStats        = $barberStats ?? [];
 
 $topServicesRows = '';
 if ($topServices !== []) {
@@ -58,6 +59,26 @@ if ($expensesByCategory !== []) {
         . '</tr>';
 } else {
     $expensesRows = '<tr><td colspan="3" class="empty">Sin gastos en este período</td></tr>';
+}
+
+$barberStatsRows = '';
+if ($barberStats !== []) {
+    $barberTotal = max(array_sum(array_map(fn ($r) => (int) $r['total'], $barberStats)), 1);
+    foreach ($barberStats as $bs) {
+        $pct = round(((int) $bs['total'] / $barberTotal) * 100, 1);
+        $barberStatsRows .= '<tr>'
+            . '<td>' . View::e($bs['name']) . '</td>'
+            . '<td class="c">' . (int) $bs['total'] . '</td>'
+            . '<td class="r">' . $pct . '%</td>'
+            . '</tr>';
+    }
+    $barberStatsRows .= '<tr class="row-total">'
+        . '<td>Total</td>'
+        . '<td class="c">' . $barberTotal . '</td>'
+        . '<td class="r">100%</td>'
+        . '</tr>';
+} else {
+    $barberStatsRows = '<tr><td colspan="3" class="empty">Sin datos en este período</td></tr>';
 }
 
 $logoHtml = $logo !== ''
@@ -187,6 +208,14 @@ $logoHtml = $logo !== ''
             <tr><th>Servicio</th><th class="c">Citas</th><th class="r">Ingreso</th></tr>
         </thead>
         <tbody><?= $topServicesRows ?></tbody>
+    </table>
+
+    <div class="section-title">Citas por Barbero</div>
+    <table class="data">
+        <thead>
+            <tr><th>Barbero</th><th class="c">Citas</th><th class="r">%</th></tr>
+        </thead>
+        <tbody><?= $barberStatsRows ?></tbody>
     </table>
 
     <div class="section-title">Gastos por Categoría</div>

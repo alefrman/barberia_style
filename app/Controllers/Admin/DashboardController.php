@@ -31,13 +31,18 @@ class DashboardController extends Controller
         $periodInput = (string) $request->input('period', 'month');
         $period = in_array($periodInput, ['month', 'week'], true) ? $periodInput : 'month';
 
-        // Ingreso = únicamente citas con estado "Completada"
+        // Ingreso = citas completadas + facturas POS
         $monthIncome = (float) Database::fetchValue(
             "SELECT COALESCE(SUM(a.total), 0)
              FROM appointments a
              INNER JOIN appointment_statuses s ON s.id = a.status_id
              WHERE LOWER(s.name) = 'completada'
                AND DATE_FORMAT(a.appointment_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
+        );
+        $monthIncome += (float) Database::fetchValue(
+            "SELECT COALESCE(SUM(total), 0)
+             FROM invoices
+             WHERE DATE_FORMAT(created_at, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
         );
 
         $monthExpenses = (float) Database::fetchValue(
@@ -46,13 +51,32 @@ class DashboardController extends Controller
              WHERE DATE_FORMAT(expense_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
         );
 
-        $monthTicket = (float) (Database::fetchValue(
-            "SELECT COALESCE(SUM(a.total) / NULLIF(COUNT(*), 0), 0)
+        $appointmentTicketSum = (float) Database::fetchValue(
+            "SELECT COALESCE(SUM(a.total), 0)
              FROM appointments a
              INNER JOIN appointment_statuses s ON s.id = a.status_id
              WHERE LOWER(s.name) = 'completada'
                AND DATE_FORMAT(a.appointment_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
-        ) ?? 0);
+        );
+        $appointmentTicketCount = (int) Database::fetchValue(
+            "SELECT COUNT(*)
+             FROM appointments a
+             INNER JOIN appointment_statuses s ON s.id = a.status_id
+             WHERE LOWER(s.name) = 'completada'
+               AND DATE_FORMAT(a.appointment_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
+        );
+        $invoiceTicketSum = (float) Database::fetchValue(
+            "SELECT COALESCE(SUM(total), 0)
+             FROM invoices
+             WHERE DATE_FORMAT(created_at, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
+        );
+        $invoiceTicketCount = (int) Database::fetchValue(
+            "SELECT COUNT(*)
+             FROM invoices
+             WHERE DATE_FORMAT(created_at, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')"
+        );
+        $monthTicket = ($appointmentTicketSum + $invoiceTicketSum)
+            / max($appointmentTicketCount + $invoiceTicketCount, 1);
 
         // Series mensuales (desde el primer mes con datos)
         [$labels, $incomeByMonth, $expensesByMonth] = $this->monthlySeries();
@@ -87,12 +111,18 @@ class DashboardController extends Controller
              INNER JOIN appointment_statuses s  ON s.id = a.status_id
              WHERE LOWER(s.name) = 'completada'"
         ) ?? 0);
+        $topProductsTotal += (int) (Database::fetchValue(
+            "SELECT COALESCE(SUM(quantity), 0) FROM invoice_products"
+        ) ?? 0);
         $totalProductSales = (float) (Database::fetchValue(
             "SELECT COALESCE(SUM(ap.price * ap.quantity), 0)
              FROM appointment_products ap
              INNER JOIN appointments a          ON a.id = ap.appointment_id
              INNER JOIN appointment_statuses s  ON s.id = a.status_id
              WHERE LOWER(s.name) = 'completada'"
+        ) ?? 0);
+        $totalProductSales += (float) (Database::fetchValue(
+            "SELECT COALESCE(SUM(price * quantity), 0) FROM invoice_products"
         ) ?? 0);
 
         return $this->view('admin/dashboard/index', [
@@ -139,6 +169,9 @@ class DashboardController extends Controller
                 INNER JOIN appointment_statuses s ON s.id = a.status_id
                 WHERE LOWER(s.name) = 'completada'
                 UNION
+                SELECT DATE_FORMAT(created_at, '%Y-%m') AS ym
+                FROM invoices
+                UNION
                 SELECT DATE_FORMAT(expense_date, '%Y-%m') AS ym
                 FROM expenses
             ) AS all_data"
@@ -160,15 +193,20 @@ class DashboardController extends Controller
             $from->modify('+1 month');
         }
 
-        // Llenar ingresos
+        // Llenar ingresos (citas completadas + facturas POS)
         $incomeRows = Database::fetchAll(
-            "SELECT DATE_FORMAT(a.appointment_date, '%Y-%m') AS ym, SUM(a.total) AS total
-             FROM appointments a
-             INNER JOIN appointment_statuses s ON s.id = a.status_id
-             WHERE LOWER(s.name) = 'completada'
-               AND a.appointment_date >= :start
-             GROUP BY ym",
-            ['start' => $start . '-01']
+            "SELECT ym, SUM(total) AS total FROM (
+                SELECT DATE_FORMAT(a.appointment_date, '%Y-%m') AS ym, a.total
+                FROM appointments a
+                INNER JOIN appointment_statuses s ON s.id = a.status_id
+                WHERE LOWER(s.name) = 'completada'
+                  AND a.appointment_date >= :s1
+                UNION ALL
+                SELECT DATE_FORMAT(created_at, '%Y-%m') AS ym, total
+                FROM invoices
+                WHERE created_at >= :s2
+            ) combined GROUP BY ym",
+            ['s1' => $start . '-01', 's2' => $start . '-01']
         );
         foreach ($incomeRows as $row) {
             if (isset($months[$row['ym']])) {
@@ -263,17 +301,27 @@ class DashboardController extends Controller
     private function topProducts(): array
     {
         return Database::fetchAll(
-            "SELECT p.name AS name,
-                    COALESCE(SUM(ap.quantity), 0)       AS units,
-                    COALESCE(SUM(ap.price * ap.quantity), 0) AS money
-             FROM appointment_products ap
-             INNER JOIN appointments a          ON a.id = ap.appointment_id
-             INNER JOIN appointment_statuses s  ON s.id = a.status_id
-             INNER JOIN products p              ON p.id = ap.product_id
-             WHERE LOWER(s.name) = 'completada'
-             GROUP BY p.id, p.name
-             ORDER BY units DESC
-             LIMIT 10"
+            "SELECT name, SUM(units) AS units, SUM(money) AS money FROM (
+                SELECT p.name AS name,
+                       COALESCE(SUM(ap.quantity), 0)              AS units,
+                       COALESCE(SUM(ap.price * ap.quantity), 0)   AS money
+                FROM appointment_products ap
+                INNER JOIN appointments a          ON a.id = ap.appointment_id
+                INNER JOIN appointment_statuses s  ON s.id = a.status_id
+                INNER JOIN products p              ON p.id = ap.product_id
+                WHERE LOWER(s.name) = 'completada'
+                GROUP BY p.id, p.name
+                UNION ALL
+                SELECT p.name AS name,
+                       COALESCE(SUM(ip.quantity), 0)              AS units,
+                       COALESCE(SUM(ip.price * ip.quantity), 0)   AS money
+                FROM invoice_products ip
+                INNER JOIN products p ON p.id = ip.product_id
+                GROUP BY p.id, p.name
+            ) combined
+            GROUP BY name
+            ORDER BY units DESC
+            LIMIT 10"
         );
     }
 }

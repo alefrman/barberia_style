@@ -124,6 +124,13 @@ class ReportController extends Controller
              WHERE {$whereAppointment}",
             $bind
         );
+        $productsRevenue += (float) Database::fetchValue(
+            "SELECT COALESCE(SUM(ip.price * ip.quantity), 0)
+             FROM invoice_products ip
+             INNER JOIN invoices i ON i.id = ip.invoice_id
+             WHERE DATE(i.created_at) >= :from2 AND DATE(i.created_at) <= :to2",
+            ['from2' => $from, 'to2' => $to]
+        );
 
         $totalExpenses = (float) Database::fetchValue(
             "SELECT COALESCE(SUM(amount), 0)
@@ -138,6 +145,11 @@ class ReportController extends Controller
              INNER JOIN appointment_statuses s ON s.id = a.status_id
              WHERE LOWER(s.name) = 'completada' AND a.appointment_date >= :from AND a.appointment_date <= :to",
             $bind
+        );
+        $completedCount += (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM invoices
+             WHERE DATE(created_at) >= :from3 AND DATE(created_at) <= :to3",
+            ['from3' => $from, 'to3' => $to]
         );
 
         $topServices = Database::fetchAll(
@@ -165,14 +177,28 @@ class ReportController extends Controller
             $bind
         );
 
+        $barberStats = Database::fetchAll(
+            "SELECT t.name AS name,
+                    COUNT(DISTINCT aps.appointment_id) AS total
+             FROM appointment_services aps
+             INNER JOIN appointments a         ON a.id = aps.appointment_id
+             INNER JOIN appointment_statuses s ON s.id = a.status_id
+             INNER JOIN team t                 ON t.id = aps.barber_id
+             WHERE {$whereAppointment}
+             GROUP BY t.id, t.name
+             ORDER BY total DESC",
+            $bind
+        );
+
         return [
-            'servicesRevenue'   => $servicesRevenue,
-            'productsRevenue'   => $productsRevenue,
-            'totalExpenses'     => $totalExpenses,
-            'netProfit'         => $servicesRevenue + $productsRevenue - $totalExpenses,
-            'completedCount'    => $completedCount,
-            'topServices'       => $topServices,
+            'servicesRevenue'    => $servicesRevenue,
+            'productsRevenue'    => $productsRevenue,
+            'totalExpenses'      => $totalExpenses,
+            'netProfit'          => $servicesRevenue + $productsRevenue - $totalExpenses,
+            'completedCount'     => $completedCount,
+            'topServices'        => $topServices,
             'expensesByCategory' => $expensesByCategory,
+            'barberStats'        => $barberStats,
         ];
     }
 }

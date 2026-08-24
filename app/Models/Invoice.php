@@ -15,6 +15,8 @@ class Invoice extends Model
 {
     protected string $table = 'invoices';
 
+    protected bool $timestamps = false;
+
     protected array $fillable = [
         'invoice_number',
         'client_name',

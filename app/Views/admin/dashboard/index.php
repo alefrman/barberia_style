@@ -66,7 +66,7 @@ $totalProductSales = (float) ($totalProductSales ?? 0);
     <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-emerald-500/30 transition">
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Ingresos del mes</p>
         <p class="mt-2 font-display text-2xl font-semibold text-emerald-400"><?= Money::format($monthIncome) ?></p>
-        <p class="mt-1 text-xs text-cream/40">Solo citas completadas</p>
+        <p class="mt-1 text-xs text-cream/40">Citas completadas + ventas POS</p>
     </div>
     <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-red-500/30 transition">
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Gastos del mes</p>
@@ -81,12 +81,12 @@ $totalProductSales = (float) ($totalProductSales ?? 0);
     <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-gold/30 transition">
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Ventas de productos</p>
         <p class="mt-2 font-display text-2xl font-semibold text-goldlight"><?= Money::format($totalProductSales) ?></p>
-        <p class="mt-1 text-xs text-cream/40">Solo citas completadas</p>
+        <p class="mt-1 text-xs text-cream/40">Citas completadas + ventas POS</p>
     </div>
     <div class="bg-darksoft rounded-2xl border border-white/5 p-6 hover:border-sky-500/30 transition">
         <p class="text-[11px] uppercase tracking-widest text-cream/50">Ticket promedio</p>
         <p class="mt-2 font-display text-2xl font-semibold text-sky-400"><?= Money::format($monthTicket) ?></p>
-        <p class="mt-1 text-xs text-cream/40">Por cita completada</p>
+        <p class="mt-1 text-xs text-cream/40">Citas + ventas POS</p>
     </div>
 </div>
 

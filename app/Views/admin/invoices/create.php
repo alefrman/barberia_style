@@ -207,7 +207,12 @@ $isModal = $isModal ?? false;
 
     addBtn.addEventListener('click', () => {
         const opt = select.options[select.selectedIndex];
-        if (!opt || opt.value === '') return;
+        if (!opt || opt.value === '') {
+            select.classList.add('border-red-400');
+            select.focus();
+            setTimeout(() => select.classList.remove('border-red-400'), 1500);
+            return;
+        }
 
         const id    = parseInt(opt.value);
         const name  = opt.textContent.split(' — ')[0].trim();
