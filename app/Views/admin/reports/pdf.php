@@ -21,6 +21,7 @@ $completedCount  = $completedCount ?? 0;
 $topServices     = $topServices ?? [];
 $expensesByCategory = $expensesByCategory ?? [];
 $barberStats        = $barberStats ?? [];
+$topProducts        = $topProducts ?? [];
 
 $topServicesRows = '';
 if ($topServices !== []) {
@@ -79,6 +80,26 @@ if ($barberStats !== []) {
         . '</tr>';
 } else {
     $barberStatsRows = '<tr><td colspan="3" class="empty">Sin datos en este período</td></tr>';
+}
+
+$topProductsRows = '';
+if ($topProducts !== []) {
+    foreach ($topProducts as $i => $tp) {
+        $topProductsRows .= '<tr>'
+            . '<td class="c">' . ($i + 1) . '</td>'
+            . '<td>' . View::e($tp['name']) . '</td>'
+            . '<td class="c">' . (int) $tp['units'] . '</td>'
+            . '<td class="r">' . Money::format((float) $tp['money']) . '</td>'
+            . '</tr>';
+    }
+    $topProductsRows .= '<tr class="row-total">'
+        . '<td></td>'
+        . '<td>Total</td>'
+        . '<td class="c">' . array_sum(array_map(fn ($r) => (int) $r['units'], $topProducts)) . '</td>'
+        . '<td class="r">' . Money::format(array_sum(array_map(fn ($r) => (float) $r['money'], $topProducts))) . '</td>'
+        . '</tr>';
+} else {
+    $topProductsRows = '<tr><td colspan="4" class="empty">Sin productos vendidos en este período</td></tr>';
 }
 
 $logoHtml = $logo !== ''
@@ -224,6 +245,14 @@ $logoHtml = $logo !== ''
             <tr><th>Categoría</th><th class="r">Total</th><th class="r">%</th></tr>
         </thead>
         <tbody><?= $expensesRows ?></tbody>
+    </table>
+
+    <div class="section-title">Top Productos</div>
+    <table class="data">
+        <thead>
+            <tr><th class="c">#</th><th>Producto</th><th class="c">Unidades</th><th class="r">Ingreso</th></tr>
+        </thead>
+        <tbody><?= $topProductsRows ?></tbody>
     </table>
 
     <div class="footer">

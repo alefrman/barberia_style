@@ -155,6 +155,38 @@ use App\Helpers\Money;
         </div>
     </div>
 
+    <!-- Top productos -->
+    <div class="bg-darksoft rounded-2xl border border-white/5 overflow-hidden mb-8">
+        <div class="px-6 py-4 border-b border-white/5">
+            <h3 class="font-display text-base font-semibold text-goldlight"><i class="fa-solid fa-box-open mr-2"></i>Top Productos</h3>
+            <p class="text-xs text-cream/50 mt-1">Productos más vendidos (servicios + punto de venta) en el período.</p>
+        </div>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-white/5">
+                    <th class="px-6 py-3 text-left text-[11px] uppercase tracking-widest text-cream/50">#</th>
+                    <th class="px-6 py-3 text-left text-[11px] uppercase tracking-widest text-cream/50">Producto</th>
+                    <th class="px-6 py-3 text-center text-[11px] uppercase tracking-widest text-cream/50">Unidades</th>
+                    <th class="px-6 py-3 text-right text-[11px] uppercase tracking-widest text-cream/50">Ingreso</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($topProducts === []): ?>
+                <tr><td colspan="4" class="px-6 py-10 text-center text-cream/40">Sin productos vendidos en este período</td></tr>
+                <?php else: ?>
+                <?php foreach ($topProducts as $i => $tp): ?>
+                <tr class="border-b border-white/5 last:border-0 hover:bg-gold/5 transition">
+                    <td class="px-6 py-3.5 text-cream/40"><?= $i + 1 ?></td>
+                    <td class="px-6 py-3.5 font-medium text-white"><?= View::e($tp['name']) ?></td>
+                    <td class="px-6 py-3.5 text-center text-cream/60"><?= (int) $tp['units'] ?></td>
+                    <td class="px-6 py-3.5 text-right font-semibold text-sky-400"><?= Money::format((float) $tp['money']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -162,7 +194,7 @@ use App\Helpers\Money;
 (function () {
     const cream = 'rgba(254, 249, 195, 0.6)';
     const borderColor = 'rgba(255, 255, 255, 0.08)';
-    const palette = ['#F59E0B', '#FBBF24', '#F87171', '#60A5FA', '#34D399', '#C084FC', '#F472B6', '#94A3B8'];
+    const palette = ['#34D399', '#6EE7B7', '#10B981', '#60A5FA', '#38BDF8', '#0EA5E9', '#2DD4BF', '#22D3EE'];
     const baseTooltip = {
         backgroundColor: '#1F2937',
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -180,7 +212,7 @@ use App\Helpers\Money;
             labels: barberRows.map(r => r.name),
             datasets: [{
                 data: barberRows.map(r => Number(r.total)),
-                backgroundColor: palette,
+                backgroundColor: barberRows.map((r, i) => r.name === 'Carlos Rivera' ? '#60A5FA' : palette[i % palette.length]),
                 borderColor: '#111827',
                 borderWidth: 2,
                 hoverOffset: 6,

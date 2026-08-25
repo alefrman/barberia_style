@@ -190,6 +190,34 @@ class ReportController extends Controller
             $bind
         );
 
+        $topProducts = Database::fetchAll(
+            "SELECT name, SUM(units) AS units, SUM(money) AS money FROM (
+                SELECT p.name AS name,
+                       COALESCE(SUM(ap.quantity), 0) AS units,
+                       COALESCE(SUM(ap.price * ap.quantity), 0) AS money
+                FROM appointment_products ap
+                INNER JOIN appointments a ON a.id = ap.appointment_id
+                INNER JOIN appointment_statuses s ON s.id = a.status_id
+                INNER JOIN products p ON p.id = ap.product_id
+                WHERE LOWER(s.name) = 'completada'
+                  AND a.appointment_date >= :from AND a.appointment_date <= :to
+                GROUP BY p.id, p.name
+                UNION ALL
+                SELECT p.name AS name,
+                       COALESCE(SUM(ip.quantity), 0) AS units,
+                       COALESCE(SUM(ip.price * ip.quantity), 0) AS money
+                FROM invoice_products ip
+                INNER JOIN invoices i ON i.id = ip.invoice_id
+                INNER JOIN products p ON p.id = ip.product_id
+                WHERE DATE(i.created_at) >= :from2 AND DATE(i.created_at) <= :to2
+                GROUP BY p.id, p.name
+            ) combined
+            GROUP BY name
+            ORDER BY money DESC
+            LIMIT 10",
+            ['from' => $from, 'to' => $to, 'from2' => $from, 'to2' => $to]
+        );
+
         return [
             'servicesRevenue'    => $servicesRevenue,
             'productsRevenue'    => $productsRevenue,
@@ -197,6 +225,7 @@ class ReportController extends Controller
             'netProfit'          => $servicesRevenue + $productsRevenue - $totalExpenses,
             'completedCount'     => $completedCount,
             'topServices'        => $topServices,
+            'topProducts'        => $topProducts,
             'expensesByCategory' => $expensesByCategory,
             'barberStats'        => $barberStats,
         ];
