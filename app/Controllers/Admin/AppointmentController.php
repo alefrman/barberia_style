@@ -209,7 +209,7 @@ class AppointmentController extends Controller
             return $this->redirect('/admin.php/appointments');
         }
 
-        $status = strtolower((string) $appointment->getAttribute('status_name'));
+        $status = $this->finalStatus($appointment);
         if (in_array($status, ['completada', 'cancelada', 'no asistió'], true)) {
             Session::flash('error', 'Esta cita no se puede editar.');
             return $this->redirect('/admin.php/appointments');
@@ -235,7 +235,7 @@ class AppointmentController extends Controller
             return $this->redirect('/admin.php/appointments');
         }
 
-        $status = strtolower((string) $appointment->getAttribute('status_name'));
+        $status = $this->finalStatus($appointment);
         if (in_array($status, ['completada', 'cancelada', 'no asistió'], true)) {
             Session::flash('error', 'Esta cita no se puede editar.');
             return $this->redirect('/admin.php/appointments');
@@ -306,19 +306,46 @@ class AppointmentController extends Controller
                 : $this->redirect('/admin.php/appointments');
         }
 
-        if (strtolower((string) $appointment->getAttribute('status_name')) === 'completada') {
+        if ($this->finalStatus($appointment) === 'completada') {
             return $request->wantsJson()
                 ? $this->json(['ok' => false, 'message' => 'La cita completada no puede cambiar de estado.'], 422)
                 : $this->redirect('/admin.php/appointments');
         }
 
-        if (AppointmentStatus::find($statusId) === null) {
+        $targetStatus = AppointmentStatus::find($statusId);
+        if ($targetStatus === null) {
             return $request->wantsJson()
                 ? $this->json(['ok' => false, 'message' => 'Selecciona un estado válido.'], 422)
                 : $this->redirect('/admin.php/appointments');
         }
 
-        Appointment::updateWhere(['id' => $id], ['status_id' => $statusId]);
+        $currentName = $this->finalStatus($appointment);
+        $targetName = strtolower((string) $targetStatus->getAttribute('name'));
+
+        if ($targetName === 'completada' && (string) $appointment->getAttribute('appointment_date') > date('Y-m-d')) {
+            return $request->wantsJson()
+                ? $this->json(['ok' => false, 'message' => 'No puedes marcar una cita futura como completada.'], 422)
+                : $this->redirect('/admin.php/appointments');
+        }
+
+        $restorable = ['cancelada', 'no asistió'];
+
+        Database::beginTransaction();
+        try {
+            if (in_array($targetName, $restorable, true) && !in_array($currentName, $restorable, true)) {
+                $this->adjustStock($id, true, 'Cita #' . $id . ($targetName === 'no asistió' ? ' no asistió' : ' cancelada'));
+            } elseif (!in_array($targetName, $restorable, true) && in_array($currentName, $restorable, true)) {
+                $this->adjustStock($id, false, 'Cita #' . $id . ' reactivada');
+            }
+
+            Appointment::updateWhere(['id' => $id], ['status_id' => $statusId]);
+            Database::commit();
+        } catch (\Throwable $e) {
+            Database::rollBack();
+            return $request->wantsJson()
+                ? $this->json(['ok' => false, 'message' => 'No se pudo actualizar el estado: ' . $e->getMessage()], 500)
+                : $this->redirect('/admin.php/appointments');
+        }
 
         if ($request->wantsJson()) {
             return $this->json(['ok' => true, 'message' => 'Estado actualizado correctamente.']);
@@ -723,6 +750,10 @@ class AppointmentController extends Controller
         }
         if (AppointmentStatus::find($data['status_id']) === null) {
             $errors[] = 'Selecciona un estado válido.';
+        } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['appointment_date'])
+            && strtolower((string) (AppointmentStatus::find($data['status_id'])?->getAttribute('name') ?? '')) === 'completada'
+            && $data['appointment_date'] > date('Y-m-d')) {
+            $errors[] = 'No puedes registrar una cita futura como completada.';
         }
         if ($data['client_name'] === '') {
             $errors[] = 'El nombre del cliente es obligatorio.';
@@ -846,7 +877,21 @@ class AppointmentController extends Controller
                 'price'          => $price,
             ]);
 
-            Product::updateWhere(['id' => $row['id']], ['stock' => $stock - $finalQty]);
+            $after = $stock - $finalQty;
+            Product::updateWhere(['id' => $row['id']], ['stock' => $after]);
+
+            Database::execute(
+                "INSERT INTO inventory_movements (product_id, type, quantity, stock_before, stock_after, note, created_by)
+                 VALUES (:pid, 'venta', :qty, :before, :after, :note, :uid)",
+                [
+                    'pid'    => $row['id'],
+                    'qty'    => -$finalQty,
+                    'before' => $stock,
+                    'after'  => $after,
+                    'note'   => 'Cita #' . $appointmentId,
+                    'uid'    => Auth::id(),
+                ]
+            );
         }
 
         $subtotal = $servicesTotal + $productsTotal;
@@ -854,12 +899,11 @@ class AppointmentController extends Controller
     }
 
     /**
-     * Ajusta el stock de los productos de una cita.
-     * $restore = true  -> devuelve stock (al eliminar/editar)
-     * $restore = false -> descuenta stock (al crear)
-     * (La edición restaura primero y vuelve a descontar con saveDetails).
+     * Ajusta el stock de los productos de una cita y registra el movimiento.
+     * $restore = true  -> devuelve stock (al eliminar/editar/cancelar)
+     * $restore = false -> descuenta stock (al crear/reactivar)
      */
-    private function adjustStock(int $appointmentId, bool $restore): void
+    private function adjustStock(int $appointmentId, bool $restore, string $note = ''): void
     {
         $rows = Database::fetchAll(
             "SELECT product_id, quantity FROM appointment_products WHERE appointment_id = :id",
@@ -871,11 +915,27 @@ class AppointmentController extends Controller
             if ($product === null) {
                 continue;
             }
-            $stock = (int) $product->getAttribute('stock');
+            $before = (int) $product->getAttribute('stock');
             $qty = (int) $row['quantity'];
-            Product::updateWhere(
-                ['id' => (int) $row['product_id']],
-                ['stock' => $restore ? $stock + $qty : $stock - $qty]
+            $after = $restore ? $before + $qty : $before - $qty;
+            if ($after < 0) {
+                $after = 0;
+            }
+
+            Product::updateWhere(['id' => (int) $row['product_id']], ['stock' => $after]);
+
+            Database::execute(
+                "INSERT INTO inventory_movements (product_id, type, quantity, stock_before, stock_after, note, created_by)
+                 VALUES (:pid, :type, :qty, :before, :after, :note, :uid)",
+                [
+                    'pid'    => (int) $row['product_id'],
+                    'type'   => $restore ? 'reversión' : 'venta',
+                    'qty'    => $restore ? $qty : -$qty,
+                    'before' => $before,
+                    'after'  => $after,
+                    'note'   => $note !== '' ? $note : ('Cita #' . $appointmentId),
+                    'uid'    => Auth::id(),
+                ]
             );
         }
     }
@@ -893,6 +953,15 @@ class AppointmentController extends Controller
              WHERE a.id = :id LIMIT 1",
             ['id' => $id]
         );
+    }
+
+    /**
+     * Nombre del estado actual de la cita en minúsculas (resuelto desde la BD).
+     */
+    private function finalStatus(Appointment $appointment): string
+    {
+        $status = AppointmentStatus::find((int) $appointment->getAttribute('status_id'));
+        return strtolower((string) ($status?->getAttribute('name') ?? ''));
     }
 
     /**

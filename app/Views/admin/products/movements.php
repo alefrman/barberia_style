@@ -11,9 +11,11 @@ $productName = (string) $product->getAttribute('name');
 $minStock = (int) $product->getAttribute('min_stock');
 
 $typeMeta = [
-    'creation' => ['label' => 'Creación',  'class' => 'bg-gold/10 text-goldlight border-gold/30',    'icon' => 'fa-box-open'],
-    'restock'  => ['label' => 'Reposición', 'class' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', 'icon' => 'fa-boxes-packing'],
-    'edit'     => ['label' => 'Ajuste',    'class' => 'bg-sky-500/10 text-sky-400 border-sky-500/30', 'icon' => 'fa-pen'],
+    'creation'  => ['label' => 'Creación',  'class' => 'bg-gold/10 text-goldlight border-gold/30',    'icon' => 'fa-box-open'],
+    'restock'   => ['label' => 'Reposición', 'class' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', 'icon' => 'fa-boxes-packing'],
+    'edit'      => ['label' => 'Ajuste',    'class' => 'bg-sky-500/10 text-sky-400 border-sky-500/30', 'icon' => 'fa-pen'],
+    'venta'     => ['label' => 'Venta',     'class' => 'bg-rose-500/10 text-rose-400 border-rose-500/30', 'icon' => 'fa-cart-shopping'],
+    'reversión' => ['label' => 'Reversión', 'class' => 'bg-amber-500/10 text-amber-400 border-amber-500/30', 'icon' => 'fa-rotate-left'],
 ];
 ?>
 <div class="max-w-5xl">
