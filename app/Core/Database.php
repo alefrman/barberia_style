@@ -28,9 +28,16 @@ final class Database
             $host     = Config::get('DB_HOST', '127.0.0.1');
             $port     = Config::get('DB_PORT', '3306');
             $dbname   = Config::get('DB_NAME', '');
-            $user     = Config::get('DB_USER', 'root');
-            $password = Config::get('DB_PASS', '');
+            $user     = (string) Config::get('DB_USER');
+            $password = (string) Config::get('DB_PASS');
             $charset  = Config::get('DB_CHARSET', 'utf8mb4');
+
+            if ($user === '' || $password === '') {
+                error_log('[Database] DB_USER/DB_PASS ausentes en .env');
+                throw new \RuntimeException(
+                    'DB_USER o DB_PASS no están definidos en .env.'
+                );
+            }
 
             $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
 

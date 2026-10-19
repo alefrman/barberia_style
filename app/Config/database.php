@@ -8,12 +8,21 @@ use App\Core\Config;
  * Configuración de la base de datos.
  * Los valores provienen del archivo .env mediante App\Core\Config.
  */
+$dbUser = (string) Config::get('DB_USER');
+$dbPass = (string) Config::get('DB_PASS');
+
+if ($dbUser === '' || $dbPass === '') {
+    throw new \RuntimeException(
+        'DB_USER o DB_PASS no están definidos en .env. Crea un usuario dedicado con privilegios mínimos.'
+    );
+}
+
 return [
     'host'     => Config::get('DB_HOST', '127.0.0.1'),
     'port'     => Config::get('DB_PORT', '3306'),
     'database' => Config::get('DB_NAME', ''),
-    'username' => Config::get('DB_USER', 'root'),
-    'password' => Config::get('DB_PASS', ''),
+    'username' => $dbUser,
+    'password' => $dbPass,
     'charset'  => Config::get('DB_CHARSET', 'utf8mb4'),
     'options'  => [
         \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
