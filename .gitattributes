@@ -1,0 +1,28 @@
+# ============================================
+# Barbería Style - Normalización de fin de línea
+# ============================================
+
+# Normalizar todos los archivos de texto a LF en el repositorio
+* text=auto eol=lf
+
+# Archivos binarios (nunca normalizar)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.phar binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.svg text
+
+# Scripts de shell siempre con LF
+*.sh text eol=lf
+
+# Scripts de Windows siempre con CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -1,4 +1,8 @@
-# URL Rewriting para el Front Controller
+# ============================================
+# Barbería Style - Public .htaccess
+# Front controller + headers de seguridad
+# ============================================
+
 RewriteEngine On
 RewriteBase /barberia_style/public/
 
@@ -8,3 +12,11 @@ RewriteCond %{REQUEST_URI} !admin\.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L]
+
+# --- Headers de seguridad ---
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>

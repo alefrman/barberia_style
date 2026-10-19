@@ -67,8 +67,8 @@ $submitUrl = $isEditing
                 <label class="block text-[11px] uppercase tracking-[.2em] text-cream/60 mb-2" for="password">
                     <i class="fa-solid fa-lock mr-2 text-gold"></i><?= $isEditing ? 'Nueva contraseña (opcional)' : 'Contraseña' ?>
                 </label>
-                <input type="password" id="password" name="password"
-                       placeholder="<?= $isEditing ? 'Dejar vacío para no cambiar' : 'Mínimo 6 caracteres' ?>"
+                <input type="password" id="password" name="password" minlength="8"
+                       placeholder="<?= $isEditing ? 'Dejar vacío para no cambiar' : 'Mínimo 8 caracteres' ?>"
                        class="w-full px-4 py-3 rounded-xl bg-dark/60 border border-white/10 text-white text-sm outline-none transition focus:border-gold/60 focus:ring-2 focus:ring-gold/20 placeholder:text-cream/30">
             </div>
         </div>

@@ -54,7 +54,8 @@ class Response
     {
         http_response_code($this->statusCode);
 
-        foreach ($this->headers as $name => $value) {
+        // Los headers propios sobreescriben los de seguridad si coincide el nombre.
+        foreach (array_merge($this->securityHeaders(), $this->headers) as $name => $value) {
             header("{$name}: {$value}");
         }
 
@@ -63,6 +64,19 @@ class Response
         } else {
             echo json_encode($this->content);
         }
+    }
+
+    /**
+     * Headers de seguridad aplicados a todas las respuestas de la app.
+     */
+    private function securityHeaders(): array
+    {
+        return [
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options'        => 'SAMEORIGIN',
+            'Referrer-Policy'        => 'strict-origin-when-cross-origin',
+            'Permissions-Policy'     => 'geolocation=(), microphone=(), camera=()',
+        ];
     }
 
     public function statusCode(): int

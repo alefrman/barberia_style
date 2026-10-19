@@ -1,0 +1,31 @@
+# ============================================
+# Bloquear ejecución de scripts en uploads/
+# ============================================
+
+# Deshabilitar el motor PHP en este directorio
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# Apache 2.4+ — denegar acceso y ejecución de scripts
+<IfModule mod_authz_core.c>
+    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .phar .pl .py .rb .sh
+    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .phar
+
+    <FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|phar|pl|py|rb|sh|cgi)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Apache 2.2 — fallback
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(php|phtml|php\d|phps|phar|pl|py|rb|sh|cgi)$">
+        Order Allow,Deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Bloquear acceso a archivos .htaccess ocultos aquí
+<Files ".ht*">
+    Require all denied
+</Files>

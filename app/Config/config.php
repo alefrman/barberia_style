@@ -14,7 +14,16 @@ define('APP_URL', rtrim((string) Config::get('APP_URL', 'http://localhost'), '/'
 define('UPLOAD_DIR', APP_URL . '/assets/uploads/');
 define('UPLOAD_PATH', BASE_PATH . '/public/assets/uploads/');
 
-define('SESSION_SECRET', Config::get('SESSION_SECRET', 'barberia_style_secret'));
+$sessionSecret = Config::get('SESSION_SECRET');
+if (!$sessionSecret || $sessionSecret === '' || $sessionSecret === 'generar_un_hash_secreto_aqui') {
+    if (APP_DEBUG) {
+        error_log('[Config] SESSION_SECRET ausente o con valor por defecto en .env');
+    }
+    throw new \RuntimeException(
+        'SESSION_SECRET no está definido en .env. Genera uno con: openssl rand -hex 32'
+    );
+}
+define('SESSION_SECRET', $sessionSecret);
 define('TIMEZONE', 'America/El_Salvador');
 define('CURRENCY', 'USD');
 
@@ -24,9 +33,12 @@ mb_internal_encoding('UTF-8');
 if (APP_DEBUG) {
     error_reporting(E_ALL);
     ini_set('display_errors', '1');
+    ini_set('log_errors', '0');
 } else {
-    error_reporting(0);
+    error_reporting(E_ALL);
     ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+    ini_set('error_log', BASE_PATH . '/logs/php_error.log');
 }
 
 require_once __DIR__ . '/database.php';

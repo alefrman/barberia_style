@@ -1,0 +1,46 @@
+# ============================================
+# Barbería Style - .gitignore
+# ============================================
+
+# Variables de entorno (credenciales)
+.env
+.env.*
+!.env.example
+
+# Dependencias (instaladas con composer install)
+/vendor/
+
+# Binario de composer (no debe ir en el repo)
+composer.phar
+
+# Archivos de base de datos con datos reales / PII
+# Se conserva schema.sql e invoices.sql (estructura sin datos)
+sql/*.sql
+!sql/schema.sql
+!sql/invoices.sql
+
+# Subidas de archivos (contenido generado en runtime)
+public/assets/uploads/*
+!public/assets/uploads/.htaccess
+
+# Logs
+/logs/*
+!/logs/.gitkeep
+*.log
+
+# Almacenamiento de runtime (rate limiting, caché, etc.)
+/storage/*
+!/storage/.gitkeep
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace

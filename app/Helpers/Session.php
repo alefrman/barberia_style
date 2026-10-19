@@ -27,11 +27,33 @@ class Session
             session_start([
                 'cookie_httponly' => true,
                 'cookie_samesite' => 'Lax',
+                'cookie_secure'   => self::isSecure(),
                 'use_strict_mode' => true,
             ]);
         }
 
         self::$started = true;
+    }
+
+    /**
+     * Detecta si la petición actual se realiza sobre HTTPS.
+     * Considera servidores detrás de proxy (X-Forwarded-Proto).
+     */
+    private static function isSecure(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
+            return true;
+        }
+
+        if ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443') {
+            return true;
+        }
+
+        if (strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https') {
+            return true;
+        }
+
+        return false;
     }
 
     public static function set(string $key, mixed $value): void

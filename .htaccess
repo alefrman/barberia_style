@@ -1,12 +1,25 @@
-# Proteger archivos sensibles
-<Files ".env">
-    Order allow,deny
-    Deny from all
-</Files>
-<Files ".env.example">
-    Order allow,deny
-    Deny from all
-</Files>
-# Bloquear acceso a directorios privados de la aplicación
+# ============================================
+# Barbería Style - Root .htaccess
+# Protege archivos y directorios sensibles
+# ============================================
+
+# --- Bloquear archivos sensibles por nombre ---
+<FilesMatch "^(\.env|\.env\.example|\.htaccess|composer\.(json|lock|phar)|package\.json|package-lock\.json|phpunit\.xml)$">
+    Require all denied
+</FilesMatch>
+
+# --- Bloquear directorios privados de la app ---
 RewriteEngine On
-RewriteRule ^(app|vendor|sql|logs|composer\.json|composer\.phar)/ - [F,L]
+
+# Bloquear directorios (con o sin slash al final)
+RewriteRule ^(app|vendor|sql|logs|tests|storage)/ - [F,L]
+
+# Bloquear archivos sueltos en la raíz que no deben exponerse
+RewriteRule ^(composer\.(json|lock|phar)|phpunit\.xml|phpunit\.xml\.dist)$ - [F,L]
+
+# --- Headers de seguridad básicos ---
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

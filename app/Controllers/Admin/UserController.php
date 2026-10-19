@@ -229,8 +229,8 @@ class UserController extends Controller
         }
 
         if ($passwordRequired) {
-            if (strlen($password) < 6) {
-                $errors[] = 'La contraseña debe tener al menos 6 caracteres.';
+            if (strlen($password) < 8) {
+                $errors[] = 'La contraseña debe tener al menos 8 caracteres.';
             }
         }
 
